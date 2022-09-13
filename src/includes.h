@@ -7,7 +7,7 @@
 #include <gd32f10x.h>
 #include <stdio.h>
 #include <stdarg.h>
-
+#include <limits.h>
 #include <FreeRTOS.h>
 #include <task.h>
 #include <semphr.h>
@@ -19,7 +19,7 @@
 #define LCD_PWM   //lcd亮度控制，使用pwm的方式，主要针对7寸屏的控制，5寸屏不受gd32单片机控制
 //#define LCD_PWM_HEAT   //LCD使用pwm加热，注释该宏表示不使用pwm
 #define BTNS_USE_INT   //按键扫描使用中断方式
-#define HWTD_USE_INT   //硬件看门狗使用外部中断，下降沿电平触发
+//#define HWTD_USE_INT   //硬件看门狗使用外部中断，下降沿电平触发
 
 
 //允许lcd低温时进行加热处理
@@ -33,9 +33,9 @@ extern const char* g_build_time_str;
 
 #define UNUSED(x)  
 
-// #include "iic_app.h"
+#include "iic_app.h"
 //#include "sys.h"
-//#include "systick.h"     //延时函数
+#include "systick.h"     //延时函数
 #include "uart.h"        //串口处理
 //#include "gpios.h"       //高低电平控制的
 //#include "gd32f10x_it.h"      //中断配置
@@ -59,8 +59,8 @@ extern const char* g_build_time_str;
 // #include "power_data_iic.h"     //获取电源iic数据
 
 //#include "lt9211.h"
-//#include "matrix_keys.h"
-//#include "nca9555.h"     //沿用之前的项目中的。
+#include "matrix_keys.h"
+#include "nca9555.h"     //沿用之前的项目中的。
 //#include "key_light.h"   //按键灯的控制
 
 //#include "flash_record.h"   //内部flash操作

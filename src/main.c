@@ -54,7 +54,7 @@ static void BoardInit(void)
 //	hard_wtd_pins_init();
 	
 	// 11.led初始化
-	Led_Show_Work_init();
+//	Led_Show_Work_init();
 //	key_light_leds_init();
 	
 	//12. 电压电流，温度，iic的初始化
@@ -109,8 +109,12 @@ int main(void)
 	
 	xTaskCreate(Task_Led_Show_Work,"TaskLed1",configMINIMAL_STACK_SIZE,NULL,2,NULL);
 
-	xTaskCreate(Com_Debug_Print_Task,"debug",configMINIMAL_STACK_SIZE,NULL,1,NULL);
-	xTaskCreate(Com_Debug_Recv_Task,"debugr",configMINIMAL_STACK_SIZE,NULL,1,NULL);
+//	xTaskCreate(Com_Debug_Print_Task,"debug",configMINIMAL_STACK_SIZE,NULL,1,NULL);  //调试串口打印任务
+	xTaskCreate(Com_Debug_Recv_Task,"debugr",configMINIMAL_STACK_SIZE,NULL,1,NULL);  //调试串口接收任务
+//	xTaskCreate(Com_Debug_Task,"debug",configMINIMAL_STACK_SIZE,NULL,1,&TaskHandle_Debug_Com);  //调试串口任务
+	
+	
+	xTaskCreate(task_matrix_keys_scan,"key_bod",configMINIMAL_STACK_SIZE,NULL,2,&TaskHandle_key_Matrix);  //矩阵键盘扫描任务
 	
 	
 //	xTaskCreate(Task_Led1,"TaskLed1",configMINIMAL_STACK_SIZE,NULL,2,NULL);	

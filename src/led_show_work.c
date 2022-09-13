@@ -39,7 +39,7 @@ void Led_Show_Work_Off(void)
 void Task_Led_Show_Work(void* arg)
 {
 //	static uint8_t n = 0;
-	
+	Led_Show_Work_init();
 	arg = arg;
 
 	while(1)

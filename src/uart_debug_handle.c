@@ -36,7 +36,12 @@
 
 #include "includes.h"
 
+
+
 #define DEBUG_UART_BAUD_RATE 115200
+
+#define DEBUG_UART_SEND_BIT (1<<0)
+#define DEBUG_UART_RECV_BIT (1<<1)
 
 //#define RECV_BUF_LEN 64
 #if 0
@@ -58,7 +63,10 @@ frame_buf_t g_com_debug_buf={{0},FRAME_LENGHT};    //数据处理缓存
 static StreamBufferHandle_t _uart_tx_StreamBuffer_Handle;
 static StreamBufferHandle_t _uart_rx_StreamBuffer_Handle;
 //static QueueHandle_t _uart_write_mutex_Handle;
-static SemaphoreHandle_t xSemaphore;
+//static SemaphoreHandle_t xSemaphore;
+
+TaskHandle_t  TaskHandle_Debug_Com;   //存放调试串口任务指针
+
 
 
 void Com_Debug_init(uint32_t bandrate)
@@ -66,13 +74,13 @@ void Com_Debug_init(uint32_t bandrate)
 	gd_eval_com_init(DEBUG_COM_NUM,DEBUG_UART_BAUD_RATE);  //用于调试
 	
 		// Disable stream buffers so I/O occurs immediately
-	setvbuf(stdin,  NULL, _IONBF, 0); // should be a read-only stream
-	setvbuf(stdout, NULL, _IONBF, 0); // disables wait for \n before printing
-	setvbuf(stderr, NULL, _IONBF, 0); // should be already unbuffered
+//	setvbuf(stdin,  NULL, _IONBF, 0); // should be a read-only stream
+//	setvbuf(stdout, NULL, _IONBF, 0); // disables wait for \n before printing
+//	setvbuf(stderr, NULL, _IONBF, 0); // should be already unbuffered
 	
 	
 	// Initialise transmit and receive message queues
-	_uart_tx_StreamBuffer_Handle = xStreamBufferCreate(256, 1);  //缓冲大小，触发字节数
+	_uart_tx_StreamBuffer_Handle = xStreamBufferCreate(64, 1);  //缓冲大小，触发字节数
 	_uart_rx_StreamBuffer_Handle = xStreamBufferCreate(64,  1);
 
 	// Initialise write mutex  QueueHandle_t xQueueCreateMutex
@@ -102,14 +110,14 @@ static int __io_putchar(int c)
 {
     // Queue char for transmission, block if queue full
 //    osMessageQueuePut(_uart_tx_queue_id, &c, 0U, osWaitForever);
-	//const TickType_t x10000ms = pdMS_TO_TICKS( 10000 );
+	const TickType_t x10ms = pdMS_TO_TICKS( 10 );
 	
-	xStreamBufferSend(_uart_tx_StreamBuffer_Handle,&c,1,portMAX_DELAY);  //一直等待，直到成功，感觉可能有点问题
-	
+	xStreamBufferSend(_uart_tx_StreamBuffer_Handle,&c,1,x10ms);  //一直等待，直到成功，感觉可能有点问题
+//	xTaskNotify(TaskHandle_Debug_Com, DEBUG_UART_SEND_BIT, eSetBits);  //唤醒休眠的任务
 	
     // Enable TXE interrupt
     //LL_USART_EnableIT_TXE(USARTx_INSTANCE); 
-	//usart_interrupt_enable(DEBUG_COM_NUM, USART_INT_TBE);    //发送缓存空的中断
+	usart_interrupt_enable(EVAL_COM0, USART_INT_TBE);    //发送缓存空的中断
     return c;
 }
 
@@ -119,10 +127,9 @@ int __io_getchar(void)
     uint8_t dat;
 
 	dat = (uint8_t)usart_data_receive(EVAL_COM0);//(USART3); 
-	
-	
+		
 	//static uint8_t c;
-	BaseType_t xHigherPriorityTaskWoken = pdFALSE;  //要不要切换任务
+	BaseType_t xHigherPriorityTaskWoken = pdFALSE;  //要不要切换任务，属于返回参数
 //    osMessageQueueGet(_uart_rx_queue_id, &c, NULL, osWaitForever);
 	xStreamBufferSendFromISR(_uart_rx_StreamBuffer_Handle,&dat,1,&xHigherPriorityTaskWoken);  //读出串口的数据，写入buf
 	//xStreamBufferReceiveFromISR
@@ -263,45 +270,7 @@ static void Com_Debug_Message_Handle1(uint8_t buf)
 
 
 
-
-
-
-void _uart_rxne_isr(void);
-void _uart_txe_isr(void);
-void _uart_error(void);
-
-void USART0_IRQHandler(void)
-{
-    if(usart_interrupt_flag_get(EVAL_COM0, USART_INT_FLAG_RBNE))
-    {
-		usart_interrupt_flag_clear(USART0, USART_INT_FLAG_RBNE);   //清中断标志
-        //_uart_rxne_isr();
-		__io_getchar();
-    }
-
-//    else if(usart_interrupt_flag_get(EVAL_COM0, USART_INT_FLAG_TBE))
-//    {
-//        _uart_txe_isr();
-//		usart_interrupt_flag_clear(USART0, USART_INT_FLAG_TBE);   //清中断标志
-//    }
-
-    else //if(usart_interrupt_flag_get(EVAL_COM0, USART_INT_FLAG_RBNE) /*&& LL_USART_IsActiveFlag_NE(USARTx_INSTANCE)*/)
-    {
-        _uart_error();
-    }
-}
-
-void _uart_rxne_isr(void)
-{
-
-}
-
-void _uart_txe_isr(void)
-{
-
-}
-
-void _uart_error(void)
+static void _uart_error(void)
 {
     if (usart_interrupt_flag_get(EVAL_COM0, USART_INT_FLAG_PERR)) 
     {
@@ -327,6 +296,58 @@ void _uart_error(void)
 		usart_interrupt_flag_clear(USART0, USART_INT_FLAG_ERR_NERR);   //清中断标志
     }
 }
+
+
+
+static void debug_uart_send_isr(void)
+{
+	uint8_t c;
+	BaseType_t pxHigherPriorityTaskWoken = pdFALSE;
+	size_t bytes = xStreamBufferBytesAvailable(_uart_tx_StreamBuffer_Handle);
+	
+	if(!bytes)   //没有数据
+	{
+		usart_interrupt_disable(EVAL_COM0, USART_INT_TBE);    //发送缓存空的中断
+		return;
+	}
+	else
+	{
+		if(xStreamBufferReceiveFromISR(_uart_tx_StreamBuffer_Handle,&c,1,&pxHigherPriorityTaskWoken)) //不等待
+		{  //如果缓存有数据
+			Uart_Tx(DEBUG_COM_NUM, c);
+		}
+		else  //缓存没有数据
+		{
+			usart_interrupt_disable(EVAL_COM0, USART_INT_TBE);    //发送缓存空的中断
+		}
+	}
+	
+}
+
+
+
+//调试串口中断处理函数
+void USART0_IRQHandler(void)
+{
+	BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+    if(usart_interrupt_flag_get(EVAL_COM0, USART_INT_FLAG_RBNE))
+    {
+		usart_interrupt_flag_clear(EVAL_COM0, USART_INT_FLAG_RBNE);   //清中断标志
+		__io_getchar();
+//		xTaskNotifyFromISR(TaskHandle_Debug_Com, DEBUG_UART_RECV_BIT, eSetBits, &xHigherPriorityTaskWoken);  //唤醒休眠的任务
+    }
+	else if(usart_interrupt_flag_get(EVAL_COM0, USART_INT_FLAG_TBE))  //发送中断
+	{
+		usart_interrupt_flag_clear(EVAL_COM0, USART_INT_FLAG_TBE);   //清中断标志
+		debug_uart_send_isr();
+	}
+    else //if(usart_interrupt_flag_get(EVAL_COM0, USART_INT_FLAG_RBNE) /*&& LL_USART_IsActiveFlag_NE(USARTx_INSTANCE)*/)
+    {
+        _uart_error();
+    }
+}
+
+
 
 
 
@@ -382,6 +403,70 @@ void Com_Debug_Print_Task(void * parameter)
 	}
          
 }
+
+
+//调试串口的打印任务，把打印和接收的任务放在一起
+//void Com_Debug_Task(void * parameter)
+//{      
+////	BaseType_t err = pdPASS;
+//	uint8_t c;
+//	uint32_t ulNotificationValue;
+//	//TickType_t xTicksToWait
+////	BaseType_t xHigherPriorityTaskWoken = portMAX_DELAY;  //无限制等待
+////    osMessageQueueGet(_uart_rx_queue_id, &c, NULL, osWaitForever);
+//	size_t bytes,i ;
+//	
+//	
+//	while(1)
+//	{
+//		
+//		xTaskNotifyWait(ULONG_MAX,        //进入时，清零哪些位，0表示都不清零，ULONG_MAX的时候就会将任务通知值清零
+//						0,   //退出时，清除对应的位，0表示都不清零
+//						&ulNotificationValue,  //返回的通知值
+//						portMAX_DELAY);    //无限等待
+
+//		if(ulNotificationValue & DEBUG_UART_SEND_BIT)  //发送位被设置
+//		{
+//			bytes = xStreamBufferBytesAvailable(_uart_tx_StreamBuffer_Handle);
+//			
+//			for(i=0;i<bytes;i++)
+//			{
+//				if(xStreamBufferReceive(_uart_tx_StreamBuffer_Handle,&c,1,0)) //不等待
+//				{  //如果缓存有数据
+//					Uart_Tx(DEBUG_COM_NUM, c);
+//				}
+//				else  //缓存没有数据
+//				{
+//					break;
+//				}
+//			}
+//		}
+//		
+//		if(ulNotificationValue & DEBUG_UART_RECV_BIT)
+//		{
+//			bytes = xStreamBufferBytesAvailable(_uart_rx_StreamBuffer_Handle);
+//			for(i=0;i<bytes;i++)
+//			{
+//				if(xStreamBufferReceive(_uart_rx_StreamBuffer_Handle,&c,1,0)) //不等待
+//				{  //如果缓存有数据
+//					//Uart_Tx(DEBUG_COM_NUM, c);
+//					Com_Debug_Message_Handle1(c);   //处理接收到的数据
+//					//Com_Debug_Rne_Int_Handle();
+//				}
+//				else  //缓存没有数据
+//				{
+//					break;
+//				}
+//			}
+//		}
+//		
+//		
+//	}
+//         
+//}
+
+
+
 
 
 
