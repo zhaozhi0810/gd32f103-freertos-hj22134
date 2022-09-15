@@ -149,6 +149,63 @@ int __io_getchar(void)
 //    return i;
 //}
 
+void debug_printf_string(char* str)
+{
+//    int i;
+	if(str == NULL)
+		return;
+	
+    while (*str)
+    {
+        __io_putchar(*str++);
+    }
+}
+
+//base 表示进制，10为10进制，其他均为16进制
+void debug_printf_u32(uint32_t dat,uint8_t base)
+{
+	char arr[16] = {0};
+	uint8_t i;
+	
+	arr[15] = 0;
+	if(base == 10)  //10进制输出
+	{
+		for(i=14;(i<16) && dat;i--)
+		{
+			arr[i] = dat%10 + '0';
+			dat /=10;
+		}
+	}
+	else  //16进制输出
+	{
+		for(i=14;(i<16) && dat;i--)
+		{
+			arr[i] = dat&0xf;
+			if(arr[i]<10)
+				arr[i] += '0';
+			else
+				arr[i] += 'a' - 10;
+			dat >>=4;
+		}
+		debug_printf_string(" 0x");
+	}
+	
+	debug_printf_string(arr+i+1);
+	debug_printf_string(" ");  //加一个空格
+}
+
+
+//base 表示进制，10为10进制，其他均为16进制
+void debug_printf_string_u32(char* str,uint32_t dat,uint8_t base)
+{
+	debug_printf_string(str);
+	debug_printf_u32(dat,base);
+	debug_printf_string("\r\n");
+}
+
+
+
+
 //int _read(int file, char *ptr, int len)
 //{
 //    UNUSED(file); 
@@ -186,15 +243,16 @@ int __io_getchar(void)
 
 static void  Com_Debug_Print_Help(void)
 {
-	printf("\r\nDebug cmd:\r\n");
-	printf("0. print Program build time\r\n");
-	printf("1. 7 inch lcd PWM increace(5inch lcd has no effect)\r\n");
-	printf("2. 7 inch lcd PWM decreace(5inch lcd has no effect)\r\n");
-	printf("3. reset core board!!\r\n");
-	printf("4. reset LCD & 9211\r\n");
-	printf("5. print Hard Watch Dog Status\r\n");
-	printf("6. print Mcu internal_temp\r\n");
-	printf("other. print help\r\n");
+	debug_printf_string("\r\nDebug cmd:\r\n");
+	debug_printf_string("0. print Program build time\r\n");
+	debug_printf_string("1. 7 inch lcd PWM increace(5inch lcd has no effect)\r\n");
+	debug_printf_string("2. 7 inch lcd PWM decreace(5inch lcd has no effect)\r\n");
+	debug_printf_string("3. print my task_info\r\n");
+	debug_printf_string("4. reset LCD & 9211\r\n");
+	debug_printf_string("5. print Hard Watch Dog Status\r\n");
+	debug_printf_string("6. print Mcu internal_temp\r\n");
+	debug_printf_string("7. reset core board!!\r\n");
+	debug_printf_string("other. print help\r\n");
 }
 
 
@@ -207,44 +265,49 @@ static void Com_Debug_Message_Handle1(uint8_t buf)
 	switch(buf)
 	{
 		default:   //cmd打印的时候，可能超出了可显示字符的区间
-			printf("ERROR: Command Unknow cmd = 0x%x!!!\r\n",buf);   //不能识别的命令
+			debug_printf_string("ERROR: Command Unknow \r\n");   //不能识别的命令
 			Com_Debug_Print_Help();
 		case '0':
-			printf("%s\r\n",g_build_time_str);  //打印编译的时间
-			printf("Author:JC&DaZhi <vx:285408136>\r\n"); 
+			debug_printf_string((char*)g_build_time_str);  //打印编译的时间
+			debug_printf_string("\r\n");
+			debug_printf_string("Author:JC&DaZhi <vx:285408136>\r\n"); 
 		break;
 		case '1':
 //			if(g_lcd_pwm < 100)
 //			{
 //				Lcd_pwm_out(g_lcd_pwm + 10);   //屏幕亮度加10
-//				printf("increase 7 inch lcd PWM,g_lcd_pwm = %d \r\n",g_lcd_pwm);
+//				debug_printf_string("increase 7 inch lcd PWM\r\n");
 //			}
 //			else
-				printf("g_lcd_pwm = 100\r\n");
+				debug_printf_string("g_lcd_pwm = 100\r\n");
 			break;
 		case '2':
 			//打印温度值
 //			if(g_lcd_pwm >= 10)
 //			{
 //				Lcd_pwm_out(g_lcd_pwm - 10);   //屏幕亮度加10
-//				printf("decrease 7 inch lcd PWM,g_lcd_pwm = %d \r\n",g_lcd_pwm);
+//				debug_printf_string("decrease 7 inch lcd PWM\r\n");
 //			}
 //			else
-				printf("g_lcd_pwm = 0\r\n");
+				debug_printf_string("g_lcd_pwm = 0\r\n");
 			break;
 		case '3':
-			printf("reset core board!!\r\n");  //lcd加电状态
-//			hard_wtd_reset_3399board();
+			query_task();
+			
 			break;
 		case '4':
-			printf("reset LCD & 9211\r\n");  //lcd加电状态
-//			LT9211_Config();
+			debug_printf_string("reset LCD & 9211\r\n");  //lcd加电状态
+			LT9211_Config();
 			break;
 		case '5':
-//			printf("Watch Dog Status = %s\r\n",get_hard_wtd_status()?"on":"off");   //暂时没有开启
+			debug_printf_string("Watch Dog Status : off\r\n");   //暂时没有开启
 			break;
 		case '6':
-//			printf("Mcu internal_temp = %d\r\n",get_internal_temp());
+//			debug_printf_string("Mcu internal_temp = %d\r\n",get_internal_temp());
+			break;
+		case '7':
+			debug_printf_string("reset core board!!\r\n");  //lcd加电状态
+			hard_wtd_reset_3399board();
 			break;
 	}
 }
@@ -274,25 +337,25 @@ static void _uart_error(void)
 {
     if (usart_interrupt_flag_get(EVAL_COM0, USART_INT_FLAG_PERR)) 
     {
-        printf("*** USART parity error! ***\n");
+        debug_printf_string("*** USART parity error! ***\n");
 		usart_interrupt_flag_clear(USART0, USART_INT_FLAG_PERR);   //清中断标志
     }
 
     else if (usart_interrupt_flag_get(EVAL_COM0, USART_INT_FLAG_ERR_FERR)) 
     {
-        printf("*** USART frame error! ***\n");
+        debug_printf_string("*** USART frame error! ***\n");
 		usart_interrupt_flag_clear(USART0, USART_INT_FLAG_ERR_FERR);   //清中断标志
     }
 
     else if (usart_interrupt_flag_get(EVAL_COM0, USART_INT_FLAG_ERR_ORERR)) 
     {
-        printf("*** USART overrun error! ***\n");
+        debug_printf_string("*** USART overrun error! ***\n");
 		usart_interrupt_flag_clear(USART0, USART_INT_FLAG_ERR_ORERR);   //清中断标志
     }
 
     else if (usart_interrupt_flag_get(EVAL_COM0, USART_INT_FLAG_ERR_NERR)) 
     {
-        printf("*** USART noise error! ***\n");
+        debug_printf_string("*** USART noise error! ***\n");
 		usart_interrupt_flag_clear(USART0, USART_INT_FLAG_ERR_NERR);   //清中断标志
     }
 }

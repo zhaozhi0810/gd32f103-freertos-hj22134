@@ -518,6 +518,11 @@
               <FileType>1</FileType>
               <FilePath>.\src\key_light.c</FilePath>
             </File>
+            <File>
+              <FileName>my_task_info.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\my_task_info.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>

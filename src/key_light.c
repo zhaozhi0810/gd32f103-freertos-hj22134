@@ -137,21 +137,24 @@ static void key_light_send_addr(uint8_t addr)
 
 
 /*
-	whichled  32表示所有灯
-			0-31 分别对应按键的灯
+	whichled  40表示所有灯
+			0-39 分别对应按键的灯
 			 
 	status   0 表示熄灭
 			 非0表示点亮
 */
 void key_light_leds_control(uint8_t whichled,uint8_t status)
 {	
-
+	debug_printf_string("enter key_light_leds_control\r\n");
 	if(whichled < 41)  //whichled>0 && 
 	{
 		key_light_send_addr(whichled);		
 	}
 	else
+	{
+		debug_printf_string("key_light_leds_control outof limit\r\n");
 		return;
+	}
 	
 	key_light_cs(ENABLE_KEYBOARD_CS);
 	if(status)	

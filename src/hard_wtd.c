@@ -37,17 +37,19 @@ void hard_wtd_enable(void)
 {
 	is_hwtd_enable = 1;
 	hwtd_timeout_count = hwtd_timeout;
-	MY_PRINTF("hard_wtd_enable\r\n");
+	debug_printf_string("hard_wtd_enable\r\n");
 	
-	xTaskCreate(hard_wtd_feed_task,"hwtd",configMINIMAL_STACK_SIZE,NULL,2,&TaskHandle_Hard_Wtd);
+	xTaskCreate(hard_wtd_feed_task,"hwtd",configMINIMAL_STACK_SIZE/2,NULL,2,&TaskHandle_Hard_Wtd);
 }
 
 
 void hard_wtd_disable(void)
 {
 	is_hwtd_enable = 0;
-	MY_PRINTF("hard_wtd_disable\r\n");
-	vTaskDelete(TaskHandle_Hard_Wtd);
+	debug_printf_string("hard_wtd_disable\r\n");
+	
+	if(xTaskGetHandle("hwtd") != NULL)  //任务存在的时候才去删除
+		vTaskDelete(TaskHandle_Hard_Wtd);
 }
 
 //固定喂狗，1s喂狗一次
@@ -60,7 +62,7 @@ static void hard_wtd_feed_internel(void)
 	else
 		gpio_bit_set(GPIOA, GPIO_PIN_5);  //拉高
 	
-//	MY_PRINTF("hard_wtd_feed_internel\r\n");
+//	debug_printf_string("hard_wtd_feed_internel\r\n");
 }
 
 
@@ -69,7 +71,7 @@ void hard_wtd_feed(void)
 {
 	hwtd_timeout_count = hwtd_timeout;  //
 	
-	MY_PRINTF("hard_wtd_feed\r\n");
+	debug_printf_string("hard_wtd_feed\r\n");
 }
 
 
@@ -84,14 +86,15 @@ uint8_t get_hard_wtd_status(void)
 //设置看门狗超时时间，单位100ms
 void hard_wtd_set_timeout(uint8_t timeout)
 {
-	MY_PRINTF("hard_wtd_set_timeout timeout = %d(*100ms)\r\n",timeout);
+	//MY_PRINTF("hard_wtd_set_timeout timeout = %d(*100ms)\r\n",timeout);
 	hwtd_timeout = timeout;
+	hwtd_timeout_count = hwtd_timeout;
 }
 
 //获得看门狗超时时间，单位100ms
 uint8_t  hard_wtd_get_timeout(void)
 {
-	MY_PRINTF("hard_wtd_get_timeout timeout = %d(*100ms)\r\n",hwtd_timeout);
+	//MY_PRINTF("hard_wtd_get_timeout timeout = %d(*100ms)\r\n",hwtd_timeout);
 	return hwtd_timeout;
 }
 
@@ -149,7 +152,7 @@ void hard_wtd_pins_init(void)
 //外部中断12的处理函数,按键按下和松开都会触发中断！！！！
 void exint4_handle(void)
 {
-	printf("exint4_handle reset core\r\n");
+	debug_printf_string("exint4_handle reset core\r\n");
 	if(is_hwtd_enable)   //允许看门狗的情况下，重启
 		hard_wtd_reset_3399board();
 }
@@ -172,7 +175,7 @@ static void hard_wtd_feed_task(void* arg)
 				hwtd_timeout_count--;		
 				if(!hwtd_timeout_count) //数值被减到0
 				{
-					printf("hard_wtd_feed_task timeout\r\n");
+					debug_printf_string("hard_wtd_feed_task timeout\r\n");
 					hard_wtd_reset_3399board();  
 					hard_wtd_disable();   //主板重启后，看门狗关闭
 				}

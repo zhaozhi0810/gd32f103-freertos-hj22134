@@ -99,7 +99,7 @@ static void LcdCtrl_Control_Init(void)
 //gpio 引脚初始化
 void Gpios_init(void)
 {
-	Wxen_Control_Init();
+//	Wxen_Control_Init();   //2022-09-15 不初始化反而能正常使用
 	MicCtl_Control_Init();
 	lcd_reset_control_init();
 	OePins_Control_Init();
@@ -114,7 +114,7 @@ void Gpios_init(void)
 //PD6  MicCtl 输出控制(参数status 非0输出高，0输出低)
 void MicCtl_Control_OutHigh(uint8_t status)
 {
-	MY_PRINTF("MicCtl_Control_OutHigh status = %d\r\n",status);
+	debug_printf_string("MicCtl_Control_OutHigh\r\n");
 	if(status)
 		gpio_bit_set(GPIOD, GPIO_PIN_6);
 	else

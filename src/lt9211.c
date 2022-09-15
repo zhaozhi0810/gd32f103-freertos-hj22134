@@ -124,11 +124,11 @@ uint8_t HDMI_ReadI2C_Byte(uint8_t RegAddr)
 
 void LT9211_ChipID(void)
 {
-	HDMI_WriteI2C_Byte(0xff,0x81);//register bank
-	printf("\r\nLT9211 Chip ID:%x,",HDMI_ReadI2C_Byte(0x00));
-	printf("%x, ",HDMI_ReadI2C_Byte(0x01));
-	printf("%x, ",HDMI_ReadI2C_Byte(0x02));
-	printf("\r\n");
+//	HDMI_WriteI2C_Byte(0xff,0x81);//register bank
+//	printf("\r\nLT9211 Chip ID:%x,",HDMI_ReadI2C_Byte(0x00));
+//	printf("%x, ",HDMI_ReadI2C_Byte(0x01));
+//	printf("%x, ",HDMI_ReadI2C_Byte(0x02));
+//	printf("\r\n");
 }
 
 void LT9211_SystemInt(void)
@@ -255,12 +255,12 @@ void LT9211_TimingSet(void)
 	fmt = (HDMI_ReadI2C_Byte(0x84) &0x0f);
 	vact = (HDMI_ReadI2C_Byte(0x85)<<8) +HDMI_ReadI2C_Byte(0x86);
 	pa_lpn = HDMI_ReadI2C_Byte(0x9c);
-	printf("\r\nhact = %u\n\r",hact);
+//	printf("\r\nhact = %u\n\r",hact);
 //	printdec_u32(hact);
-	printf("\r\nvact = %u\n\r",vact);
+//	printf("\r\nvact = %u\n\r",vact);
 //	printdec_u32(vact);		
-	printf("\r\nfmt = %x\n\r", fmt);
-	printf("\r\npa_lpn = %x\r\n", pa_lpn);	
+//	printf("\r\nfmt = %x\n\r", fmt);
+//	printf("\r\npa_lpn = %x\r\n", pa_lpn);	
 
 	//Timer0_vTaskDelay(100);
 	vTaskDelay(100);
@@ -283,13 +283,12 @@ void LT9211_TimingSet(void)
 	{
 		VideoFormat = video_1024x600_60Hz_vic;
 		LT9211_SetVideoTiming(&video_1024x600_60Hz);
-		printf("1024x600_60Hz\r\n");		
-	}
-	
+		debug_printf_string("1024x600_60Hz\r\n");		
+	}	
 	else 
 	{
 	   VideoFormat = video_none;
-	    printf("\r\nvideo_none\r\n");		 
+	    debug_printf_string("video_none\r\n");		 
 	}
 }
 
@@ -297,8 +296,8 @@ void LT9211_TimingSet(void)
 void LT9211_MipiRxPll(void)
 {
   	/* dessc pll */
-		HDMI_WriteI2C_Byte(0xff,0x82);
-		HDMI_WriteI2C_Byte(0x2d,0x48);
+	HDMI_WriteI2C_Byte(0xff,0x82);
+	HDMI_WriteI2C_Byte(0x2d,0x48);
     HDMI_WriteI2C_Byte(0x35,PIXCLK_44M_88M); /*0x82*/  // PIXCLK_44M_88M		
 }
 
@@ -356,83 +355,86 @@ void LT9211_MipiPcr(void)
 
 	// 	Timer0_vTaskDelay(800);//800->120
 	vTaskDelay(800);
-		 {for(loopx = 0; loopx < 10; loopx++) //Check pcr_stable 10
-		   {
+	
+	{
+		for(loopx = 0; loopx < 10; loopx++) //Check pcr_stable 10
+		{
 			//Timer0_vTaskDelay(200);
 			vTaskDelay(200);   
 			HDMI_WriteI2C_Byte(0xff,0xd0);
 			if(HDMI_ReadI2C_Byte(0x87)&0x08)
-			 {
-				printf("\r\nLT9211 pcr stable");
+			{
+				debug_printf_string("\r\nLT9211 pcr stable");
 				break;
-		   }
+			}
 			else
-			 {
-				printf("\r\nLT9211 pcr unstable!!!!");
-			 }
+			{
+				debug_printf_string("\r\nLT9211 pcr unstable!!!!");
+			}
 	  	}
   	}
 	
 	HDMI_WriteI2C_Byte(0xff,0xd0);
-	printf("LT9211 pcr_stable_M=%x\n",(HDMI_ReadI2C_Byte(0x94)&0x7F));//打印M值
+	HDMI_ReadI2C_Byte(0x94);
+	//printf("LT9211 pcr_stable_M=%x\n",(HDMI_ReadI2C_Byte(0x94)&0x7F));//打印M值
 }
 
 
 
 void LT9211_Txpll(void)
 {  
-	  uint8_t loopx;
-  if( (LT9211_OutPutModde == OUTPUT_LVDS_2_PORT) || (LT9211_OutPutModde == OUTPUT_LVDS_1_PORT) )
-  {
+	uint8_t loopx;
+	if( (LT9211_OutPutModde == OUTPUT_LVDS_2_PORT) || (LT9211_OutPutModde == OUTPUT_LVDS_1_PORT) )
+	{
 		HDMI_WriteI2C_Byte(0xff,0x82);
 		HDMI_WriteI2C_Byte(0x36,0x01); //b7:txpll_pd
-		 if( LT9211_OutPutModde == OUTPUT_LVDS_1_PORT )
-		 {
-			 HDMI_WriteI2C_Byte(0x37,0x29);
-		 }
-		 else
-		 {
-	  HDMI_WriteI2C_Byte(0x37,0x2a);
-		 }
+		if( LT9211_OutPutModde == OUTPUT_LVDS_1_PORT )
+		{
+			HDMI_WriteI2C_Byte(0x37,0x29);
+		}
+		else
+		{
+			HDMI_WriteI2C_Byte(0x37,0x2a);
+		}
 		HDMI_WriteI2C_Byte(0x38,0x06);
 		HDMI_WriteI2C_Byte(0x39,0x30);
 		HDMI_WriteI2C_Byte(0x3a,0x8e);
-		 
+
 		HDMI_WriteI2C_Byte(0xFF,0x81);
-    HDMI_WriteI2C_Byte(0x20,0xF7);// LVDS Txpll soft reset
-    HDMI_WriteI2C_Byte(0x20,0xFF);
-		
-		 
+		HDMI_WriteI2C_Byte(0x20,0xF7);// LVDS Txpll soft reset
+		HDMI_WriteI2C_Byte(0x20,0xFF);
+
+
 		HDMI_WriteI2C_Byte(0xff,0x87);
 		HDMI_WriteI2C_Byte(0x37,0x14);
 		HDMI_WriteI2C_Byte(0x13,0x00);
 		HDMI_WriteI2C_Byte(0x13,0x80);
 		//Timer0_vTaskDelay(100);
-		 vTaskDelay(100);
+		vTaskDelay(100);
 		for(loopx = 0; loopx < 10; loopx++) //Check Tx PLL cal
 		{
-			
-	    HDMI_WriteI2C_Byte(0xff,0x87);			
+
+			HDMI_WriteI2C_Byte(0xff,0x87);			
 			if(HDMI_ReadI2C_Byte(0x1f)& 0x80)
 			{
 				if(HDMI_ReadI2C_Byte(0x20)& 0x80)
 				{
-					printf("\r\nLT9211 tx pll lock");
+					debug_printf_string("LT9211 tx pll lock\r\n");
 				}
 				else
 				{
-				 printf("\r\nLT9211 tx pll unlocked");
-        }					
-				printf("\r\nLT9211 tx pll cal done");
+					debug_printf_string("LT9211 tx pll unlocked\r\n");
+				}					
+				debug_printf_string("LT9211 tx pll cal done\r\n");
 				break;
-		  }
+			}
 			else
 			{
-				printf("\r\nLT9211 tx pll unlocked");
+			debug_printf_string("LT9211 tx pll unlocked\r\n");
 			}
 		}
-  } 
-		 printf("\r\n system success");	 	
+	} 
+	debug_printf_string(" system success\r\n");	 	
 }
 
 void LT9211_TxPhy(void)
@@ -479,7 +481,7 @@ void LT9211_TxDigital(void)
 { 
 	if( (LT9211_OutPutModde == OUTPUT_LVDS_2_PORT) || (LT9211_OutPutModde == OUTPUT_LVDS_1_PORT) ) 
 	{
-		printf("\rLT9211 set to OUTPUT_LVDS");
+		debug_printf_string("\rLT9211 set to OUTPUT_LVDS");
 		HDMI_WriteI2C_Byte(0xff,0x85); /* lvds tx controller */
 		HDMI_WriteI2C_Byte(0x59,0x40); 	//bit4-LVDSTX Display color depth set 1-8bit, 0-6bit; 
 		HDMI_WriteI2C_Byte(0x5a,0xaa); 
@@ -526,7 +528,7 @@ void LT9211_ClockCheckDebug(void)
 	fm_value = fm_value + HDMI_ReadI2C_Byte(0x09);
 	fm_value = (fm_value<<8) ;
 	fm_value = fm_value + HDMI_ReadI2C_Byte(0x0a);
-	printf("\r\nmipi input byte clock: %u",fm_value);
+	//printf("\r\nmipi input byte clock: %u",fm_value);
 //	printdec_u32(fm_value);
 	
 	HDMI_WriteI2C_Byte(0xff,0x86);
@@ -539,7 +541,7 @@ void LT9211_ClockCheckDebug(void)
 	fm_value = fm_value + HDMI_ReadI2C_Byte(0x09);
 	fm_value = (fm_value<<8) ;
 	fm_value = fm_value + HDMI_ReadI2C_Byte(0x0a);
-	printf("\r\ndessc pixel clock: %u\n",fm_value);
+	//printf("\r\ndessc pixel clock: %u\n",fm_value);
 //	printdec_u32(fm_value);
 
 }
@@ -577,40 +579,49 @@ void LT9211_VideoCheckDebug(void)
 	hact = HDMI_ReadI2C_Byte(0x80);
 	hact = (hact<<8) + HDMI_ReadI2C_Byte(0x81);
 
-	printf("\r\nsync_polarity = %x", sync_polarity);
-
-	printf("\r\nhfp, hs, hbp, hact, htotal = %u %u %u %u %u\r\n",hfp,hs,hbp,hact,htotal);
+	//printf("\r\nsync_polarity = %x", sync_polarity);
+	debug_printf_string_u32("sync_polarity = ",sync_polarity,16);
+	//printf("\r\nhfp, hs, hbp, hact, htotal = %u %u %u %u %u\r\n",hfp,hs,hbp,hact,htotal);
 //	printdec_u32(hfp);
+	debug_printf_string_u32("hfp = ",hfp,10);
 //	printdec_u32(hs);
+	debug_printf_string_u32("hs = ",hs,10);
 //	printdec_u32(hbp);
+	debug_printf_string_u32("hbp = ",hbp,10);
 //	printdec_u32(hact);
+	debug_printf_string_u32("hact = ",hact,10);
 //	printdec_u32(htotal);
-
-	printf("\r\nvfp, vs, vbp, vact, vtotal = %u %u %u %u %u\r\n",vfp,vs,vbp,vact,vtotal);
+	debug_printf_string_u32("htotal = ",htotal,10);
+	//printf("\r\nvfp, vs, vbp, vact, vtotal = %u %u %u %u %u\r\n",vfp,vs,vbp,vact,vtotal);
 //	printdec_u32(vfp);
+	debug_printf_string_u32("vfp = ",vfp,10);
 //	printdec_u32(vs);
+	debug_printf_string_u32("vs = ",vs,10);
 //	printdec_u32(vbp);
+	debug_printf_string_u32("vbp = ",vbp,10);
 //	printdec_u32(vact);
+	debug_printf_string_u32("vact = ",vact,10);
 //	printdec_u32(vtotal);
+	debug_printf_string_u32("vtotal = ",vtotal,10);
 
 }
 
 void LT9211_Pattern(struct video_timing *video_format)
 {
-       uint32_t pclk_khz;
+	uint32_t pclk_khz;
 	uint8_t dessc_pll_post_div;
 	uint32_t pcr_m, pcr_k;
 
-       pclk_khz = video_format->pclk_khz;     
+	pclk_khz = video_format->pclk_khz;     
 
-       HDMI_WriteI2C_Byte(0xff,0xf9);
+	HDMI_WriteI2C_Byte(0xff,0xf9);
 	HDMI_WriteI2C_Byte(0x3e,0x80);  
  
-       HDMI_WriteI2C_Byte(0xff,0x85);
+	HDMI_WriteI2C_Byte(0xff,0x85);
 	HDMI_WriteI2C_Byte(0x88,0xc0);   //0x90:TTL RX-->Mipi TX  ; 0xd0:lvds RX->MipiTX  0xc0:Chip Video pattern gen->Lvd TX
 
-       HDMI_WriteI2C_Byte(0xa1,0x64); 
-       HDMI_WriteI2C_Byte(0xa2,0xff); 
+	HDMI_WriteI2C_Byte(0xa1,0x64); 
+	HDMI_WriteI2C_Byte(0xa2,0xff); 
 
 	HDMI_WriteI2C_Byte(0xa3,(uint8_t)((video_format->hs+video_format->hbp)/256));
 	HDMI_WriteI2C_Byte(0xa4,(uint8_t)((video_format->hs+video_format->hbp)%256));//h_start
@@ -632,7 +643,7 @@ void LT9211_Pattern(struct video_timing *video_format)
    	HDMI_WriteI2C_Byte(0xae,(uint8_t)(video_format->hs/256)); 
 	HDMI_WriteI2C_Byte(0xaf,(uint8_t)(video_format->hs%256));   //hsa
 
-       HDMI_WriteI2C_Byte(0xb0,(uint8_t)(video_format->vs%256));    //vsa
+	HDMI_WriteI2C_Byte(0xb0,(uint8_t)(video_format->vs%256));    //vsa
 
        //dessc pll to generate pixel clk
 	HDMI_WriteI2C_Byte(0xff,0x82); //dessc pll
@@ -707,7 +718,7 @@ void lt9211_lvds_tx_en(void)
 void LT9211_Patten_debug_M2LVDS(void)
 { 
  #if VIDEO_PATTERN
-	printf("\r\n LT9211_Patten_debug");
+	debug_printf_string("\r\n LT9211_Patten_debug");
 	LT9211_ChipID();
 	LT9211_SystemInt();
   
@@ -732,7 +743,7 @@ void LT9211_Patten_debug_M2LVDS(void)
 
 static void LT9211_Init(void)
 { 
-	printf("\r\n LT9211_mipi to TTL\r\n");	
+	debug_printf_string("\r\n LT9211_mipi to TTL\r\n");	
 	LT9211_ChipID();
 	LT9211_SystemInt();
 	vTaskDelay(10);
@@ -779,7 +790,7 @@ void LT9211_Config(void)
 
 //创建后，删除自己
 void LT9211_Once_Task(void* arg)
-{
+{	
 	LT9211_Mcu_ControlPort_Init();
 	vTaskDelay(10);
 	LT9211_Config();

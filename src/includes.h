@@ -67,6 +67,6 @@ extern const char* g_build_time_str;
 #include "internal_temp.h"   //单片机温度采集
 #include "hard_wtd.h"     //外部硬件看门狗
 
-
+#include "my_task_info.h"
 #endif
 

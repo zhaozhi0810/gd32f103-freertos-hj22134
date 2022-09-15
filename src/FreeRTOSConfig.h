@@ -95,7 +95,7 @@
 #define configCPU_CLOCK_HZ				( SystemCoreClock )
 #define configTICK_RATE_HZ				( ( TickType_t ) 1000 )
 #define configMAX_PRIORITIES			( 5 )
-#define configMINIMAL_STACK_SIZE		( ( unsigned short ) 128 )   //原先是130
+#define configMINIMAL_STACK_SIZE		( ( unsigned short ) 64 )   //原先是130
 #define configTOTAL_HEAP_SIZE			( ( size_t ) ( 10 * 1024 ) )  //gd32f103vbt6 最大只有20k
 #define configMAX_TASK_NAME_LEN			( 10 )
 #define configUSE_TRACE_FACILITY		1
@@ -108,8 +108,10 @@
 #define configUSE_MALLOC_FAILED_HOOK	0       //原先设置为1
 #define configUSE_APPLICATION_TASK_TAG	0
 #define configUSE_COUNTING_SEMAPHORES	1
-#define configGENERATE_RUN_TIME_STATS	0
- 
+#define configGENERATE_RUN_TIME_STATS	0  
+//#define portCONFIGURE_TIMER_FOR_RUN_TIME_STATS()   ConfigureTimerForRunTimeStates()
+//#define portGET_RUN_TIME_COUNTER_VALUE()           FreeRTOSRunTimeTicks
+
 /* Co-routine definitions. */
 #define configUSE_CO_ROUTINES 		0
 #define configMAX_CO_ROUTINE_PRIORITIES ( 2 )
@@ -118,7 +120,9 @@
 #define configUSE_TIMERS				0
 #define configTIMER_TASK_PRIORITY		( 2 )
 #define configTIMER_QUEUE_LENGTH		10
-#define configTIMER_TASK_STACK_DEPTH	( configMINIMAL_STACK_SIZE * 2 )
+#define configTIMER_TASK_STACK_DEPTH	( configMINIMAL_STACK_SIZE )
+#define configUSE_STATS_FORMATTING_FUNCTIONS 1 //2022-09-15  add
+
 
 /* Set the following definitions to 1 to include the API function, or zero
 to exclude the API function. */
@@ -129,6 +133,9 @@ to exclude the API function. */
 #define INCLUDE_vTaskSuspend			1
 #define INCLUDE_vTaskDelayUntil			1
 #define INCLUDE_vTaskDelay				1
+#define INCLUDE_xTaskGetHandle			1   //2022-09-15  add
+#define INCLUDE_uxTaskGetStackHighWaterMark 1 //2022-09-15  add
+
 
 /* Cortex-M specific definitions. */
 #ifdef __NVIC_PRIO_BITS

@@ -268,7 +268,7 @@ void send_btn_change_to_cpu(uint8_t whichkey,uint8_t status)
 	
 	if(!(uart_inited & 2))   //串口没初始化
 	{
-		printf("error: TOCPU_COM not init\n");
+		debug_printf_string("error: TOCPU_COM not init\n");
 		return ;
 	}
 	buf[0] = FRAME_HEAD;  //帧头	

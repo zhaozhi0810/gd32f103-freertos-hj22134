@@ -215,9 +215,9 @@ void AnswerCpu_data(uint8_t *cmd)
 			break;
 		case eMCU_LEDSETALL_TYPE:  //设置所有的led 打开或者关闭
 			if(cmd[1])
-				key_light_leds_control(32,1);   //打开所有的led
+				key_light_leds_control(40,1);   //打开所有的led
 			else
-				key_light_leds_control(32,0);   //关闭所有的led
+				key_light_leds_control(40,0);   //关闭所有的led
 		break;
 		case eMCU_LED_STATUS_TYPE:		  //led 状态获取			
 			buf[2] = get_led_status(cmd[1]); //获得的值保存在buf[2]中发回去		
@@ -248,7 +248,11 @@ void AnswerCpu_data(uint8_t *cmd)
 			hard_wtd_reset_3399board();  //
 			break;
 		case eMCU_RESET_LCD_TYPE:  //复位lcd 9211（复位引脚没有连通）
-			//LT9211_Config();
+			if(xTaskGetHandle("lt9211") == NULL)  //如果没有这个任务
+			{
+				xTaskCreate(LT9211_Once_Task,"lt9211",configMINIMAL_STACK_SIZE+16,NULL,4,NULL);
+			}			
+		//LT9211_Config();
 		//	cmd_init_9211 = 1;   //在main中去复位
 //			g_task_id |= 1<<4 ;  //在main中去复位 2022-09-06
 			break;

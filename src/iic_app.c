@@ -45,8 +45,8 @@ uint8_t IicApp_Read_Byte_Cur(iic_index_t index,uint8_t dev_addr,uint8_t *dat,uin
 	//if(iic_put_devaddr(I2Cx,dev_addr | 1) != 0)   //最低位是1，表示读操作
 	{
 		xTaskResumeAll();//taskEXIT_CRITICAL(); //退出临界区   2022-09-13
-		//printf("i2c  read_byte_cur send dev addr error!\r\n");
-		DBG_PRINTF("ERROR:IIC_Wait_Ack(index)!= 0 index = %d\r\n",index);
+		//debug_printf_string("i2c  read_byte_cur send dev addr error!\r\n");
+		debug_printf_string("ERROR:IIC_Wait_Ack(index)!= 0\r\n");
 		IIC_Stop(index);//产生一个停止条件
 		
 		return 2;
@@ -96,8 +96,8 @@ uint8_t IicApp_Write_Bytes(iic_index_t index,uint8_t dev_addr,uint8_t word_addr,
 	if(IIC_Wait_Ack(index)!= 0) 
 	{
 		xTaskResumeAll();//taskEXIT_CRITICAL(); //退出临界区  2022-09-13
-		//printf("i2c  read_byte_cur send dev addr error!\r\n");
-		DBG_PRINTF("ERROR: send dev_addr IIC_Wait_Ack(index)!= 0 dev_addr = 0x%x index = %d\r\n",dev_addr,index);
+		//debug_printf_string("i2c  read_byte_cur send dev addr error!\r\n");
+		debug_printf_string("ERROR: send dev_addr IIC_Wait_Ack(index)!= 0\r\n");
 		IIC_Stop(index);
 		
 		return 2;
@@ -108,8 +108,8 @@ uint8_t IicApp_Write_Bytes(iic_index_t index,uint8_t dev_addr,uint8_t word_addr,
 	if(IIC_Wait_Ack(index))  //如果没有应答，直接退出
 	{
 		xTaskResumeAll();//taskEXIT_CRITICAL(); //退出临界区  2022-09-13
-		//printf("send word addr error!\r\n");
-		DBG_PRINTF("ERROR: send word_addr IIC_Wait_Ack(index)!= 0 index = %d\r\n",index);
+		//debug_printf_string("send word addr error!\r\n");
+		debug_printf_string("ERROR: send word_addr IIC_Wait_Ack(index)!= 0\r\n");
 		IIC_Stop(index); //iic_stop(I2Cx);     //发送停止信号，总线就空闲了
 		
 		return 3;
@@ -130,8 +130,8 @@ uint8_t IicApp_Write_Bytes(iic_index_t index,uint8_t dev_addr,uint8_t word_addr,
 		//if(iic_put_byte_data(I2Cx,dat[i]))  //如果没有应答，直接退出
 		{
 			xTaskResumeAll();//taskEXIT_CRITICAL(); //退出临界区  2022-09-13
-			//printf("send data error!\r\n");
-			DBG_PRINTF("ERROR: send data IIC_Wait_Ack(index)!= 0 i=%d index = %d\r\n",i,index);
+			//debug_printf_string("send data error!\r\n");
+			debug_printf_string("ERROR: send data IIC_Wait_Ack(index)!= 0\r\n");
 			IIC_Stop(index); //iic_stop(I2Cx);     //发送停止信号，总线就空闲了
 			
 			return 4;
@@ -164,11 +164,11 @@ uint8_t IicApp_Read_Bytes(iic_index_t index,uint8_t dev_addr,uint8_t word_addr,u
 	
 	if(ret == 255)	//特殊情况的处理
 	{
-	//	printf("IicApp_Read_Byte_Curret == 255 \r\n");
+	//	debug_printf_string("IicApp_Read_Byte_Curret == 255 \r\n");
 		return IicApp_Read_Byte_Cur(index,dev_addr,dat,len);
 	}
 	else
-		DBG_PRINTF("ERROR: IicApp_Write_Bytes ret = %d index = %d\r\n",ret,index);
+		debug_printf_string("ERROR: IicApp_Write_Bytes\r\n");
 	return ret;   //在这返回
 }
 
