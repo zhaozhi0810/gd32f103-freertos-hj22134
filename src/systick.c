@@ -65,13 +65,13 @@ void SystickConfig(void)
     \param[out] none
     \retval     none
 */
-void Delay1ms(uint32_t count)
-{
-    delay = count;
+//void Delay1ms(uint32_t count)
+//{
+//    delay = count;
 
-    while(0U != delay){
-    }
-}
+//    while(0U != delay){
+//    }
+//}
 
 /*!
     \brief      delay decrement

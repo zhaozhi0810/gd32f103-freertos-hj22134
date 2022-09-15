@@ -37,11 +37,11 @@ extern const char* g_build_time_str;
 //#include "sys.h"
 #include "systick.h"     //延时函数
 #include "uart.h"        //串口处理
-//#include "gpios.h"       //高低电平控制的
+#include "gpios.h"       //高低电平控制的
 //#include "gd32f10x_it.h"      //中断配置
 
 
-//#include "lcd_pwm.h"     //液晶屏亮度控制，主要针对7寸屏的控制，5寸屏不受gd32单片机控制
+#include "lcd_pwm.h"     //液晶屏亮度控制，主要针对7寸屏的控制，5寸屏不受gd32单片机控制
 
 // #include "cpu_run_states.h"  //cpu上电运行状态的监控
 // #include "power_btn.h"    //cpu上电复位，及开机按键处理
@@ -51,21 +51,21 @@ extern const char* g_build_time_str;
 //#include "task_cfg.h"    //任务相关的宏定义
 #include "led_show_work.h"    //调试灯
 // #include "di_4ttl.h"     //4路开关量输入
-// #include "uart_conect_cpu_handler.h"   //与cpu通信的串口接收发送处理
+#include "uart_conect_cpu_handler.h"   //与cpu通信的串口接收发送处理
 #include "uart_debug_handle.h"        //调试串口的接收处理
 // #include "optica_switch_status.h"        //调试串口的接收处理
 // #include "hard_wtg.h"     //硬件看门狗
 // #include "msata_destroy.h"     //硬件销毁
 // #include "power_data_iic.h"     //获取电源iic数据
 
-//#include "lt9211.h"
+#include "lt9211.h"
 #include "matrix_keys.h"
 #include "nca9555.h"     //沿用之前的项目中的。
-//#include "key_light.h"   //按键灯的控制
+#include "key_light.h"   //按键灯的控制
 
 //#include "flash_record.h"   //内部flash操作
-//#include "internal_temp.h"   //单片机温度采集
-//#include "hard_wtd.h"     //外部硬件看门狗
+#include "internal_temp.h"   //单片机温度采集
+#include "hard_wtd.h"     //外部硬件看门狗
 
 
 #endif

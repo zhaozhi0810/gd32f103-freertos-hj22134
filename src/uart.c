@@ -41,8 +41,7 @@ void gd_eval_com_init(uint32_t com_id,uint32_t bandrate)
     if(TOCPU_COM_NUM == com_id){
         com = EVAL_COM1;
     }
-	
-	
+		
 	if(uart_inited & (1<<com_id))   //已经初始化了，就不用再来初始化了。
 		return;
 		
@@ -74,12 +73,7 @@ void gd_eval_com_init(uint32_t com_id,uint32_t bandrate)
 	usart_interrupt_enable(com, USART_INT_RBNE);    //接收中断
 //	usart_interrupt_enable(com, USART_INT_ERR);
 	
-	//5.1 调试串口不再开启空闲中断。
-//	if(com_id == TOCPU_COM_NUM)  //给cpu的通信使用缓存
-//	{
-//		usart_interrupt_enable(com, USART_INT_IDLE);    //空闲中断
-////		Com_Cpu_Recive_Buff_Init();   //接收缓存初始化
-//	}
+
 	//6. nvic的配置
 	//nvic_irq_enable(COM_NVIC[com_id],  COM_PRIO[com_id]>>2, COM_PRIO[com_id]&0x3);   //允许中断，并设置优先级
 	nvic_irq_enable(COM_NVIC[com_id],  COM_PRIO[com_id], 0);	//全部是抢占优先级

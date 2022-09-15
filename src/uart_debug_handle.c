@@ -65,7 +65,7 @@ static StreamBufferHandle_t _uart_rx_StreamBuffer_Handle;
 //static QueueHandle_t _uart_write_mutex_Handle;
 //static SemaphoreHandle_t xSemaphore;
 
-TaskHandle_t  TaskHandle_Debug_Com;   //存放调试串口任务指针
+//TaskHandle_t  TaskHandle_Debug_Com;   //存放调试串口任务指针
 
 
 
@@ -355,54 +355,47 @@ void USART0_IRQHandler(void)
 //调试串口的接收任务
 void Com_Debug_Recv_Task(void * parameter)
 {      
-//	BaseType_t err = pdPASS;
 	uint8_t c;
-	BaseType_t xHigherPriorityTaskWoken = portMAX_DELAY;  //无限制等待
-//    osMessageQueueGet(_uart_rx_queue_id, &c, NULL, osWaitForever);
-//	size_t ret ;
-	
-	
+//	BaseType_t xHigherPriorityTaskWoken = portMAX_DELAY;  //无限制等待
+//	vTaskDelay(20000);	
 	while(1)
-	{
-		if(xStreamBufferReceive(_uart_rx_StreamBuffer_Handle,&c,1,xHigherPriorityTaskWoken))
+	{		
+		if(xStreamBufferReceive(_uart_rx_StreamBuffer_Handle,&c,1,portMAX_DELAY))
 		{  //如果缓存有数据
-			//Uart_Tx(DEBUG_COM_NUM, c);
 			Com_Debug_Message_Handle1(c);
-			//Com_Debug_Rne_Int_Handle();
 		}
 		else  //缓存没有数据
 		{
 			
 		}
-	}
-         
+	}         
 }
 
 
 
 //调试串口的打印任务
-void Com_Debug_Print_Task(void * parameter)
-{      
-//	BaseType_t err = pdPASS;
-	uint8_t c;
-	BaseType_t xHigherPriorityTaskWoken = portMAX_DELAY;  //无限制等待
-//    osMessageQueueGet(_uart_rx_queue_id, &c, NULL, osWaitForever);
-//	size_t ret ;
-	
-	
-	while(1)
-	{
-		if(xStreamBufferReceive(_uart_tx_StreamBuffer_Handle,&c,1,xHigherPriorityTaskWoken))
-		{  //如果缓存有数据
-			Uart_Tx(DEBUG_COM_NUM, c);
-		}
-		else  //缓存没有数据
-		{
-			
-		}
-	}
-         
-}
+//void Com_Debug_Print_Task(void * parameter)
+//{      
+////	BaseType_t err = pdPASS;
+//	uint8_t c;
+//	BaseType_t xHigherPriorityTaskWoken = portMAX_DELAY;  //无限制等待
+////    osMessageQueueGet(_uart_rx_queue_id, &c, NULL, osWaitForever);
+////	size_t ret ;
+//	
+//	
+//	while(1)
+//	{
+//		if(xStreamBufferReceive(_uart_tx_StreamBuffer_Handle,&c,1,xHigherPriorityTaskWoken))
+//		{  //如果缓存有数据
+//			Uart_Tx(DEBUG_COM_NUM, c);
+//		}
+//		else  //缓存没有数据
+//		{
+//			
+//		}
+//	}
+//         
+//}
 
 
 //调试串口的打印任务，把打印和接收的任务放在一起

@@ -5,12 +5,15 @@
 
 #include <gd32f10x.h>
 #include "uart.h"
-
+#include "task.h"
 /*
 2022-04-21 调整（不主动发送呢，就可以节省cpu和单片机的精力，不用老是处理）
 
 
 */
+
+extern TaskHandle_t  TaskHandle_ToCpu_Com;   //存放调试串口任务指针
+
 
 
 //注意单片机与cpu保持一致  2022-07-28
@@ -50,25 +53,25 @@ typedef enum
 
 
 
-#define FRAME_LENGHT (8)    //数据帧的字节数
+//#define FRAME_LENGHT (8)    //数据帧的字节数
 
 
-typedef struct frame_buf
-{
-	uint8_t com_handle_buf[FRAME_LENGHT];   //接收缓存
-	uint8_t datalen;            //帧长-缓存中的数据长度，即下一次要读的字节数
-}frame_buf_t;
+//typedef struct frame_buf
+//{
+//	uint8_t com_handle_buf[FRAME_LENGHT];   //接收缓存
+//	uint8_t datalen;            //帧长-缓存中的数据长度，即下一次要读的字节数
+//}frame_buf_t;
 
 
 //消息处理的函数指针
-typedef void (*message_handle)(uint8_t* );
+//typedef void (*message_handle)(uint8_t* );
 
 //中断处理函数
-void Com_Cpu_Rne_Int_Handle(void);
+//void Com_Cpu_Rne_Int_Handle(void);
 //帧数据处理函数
-void Com_Frame_Handle(frame_buf_t* buf, Queue_UART_STRUCT* Queue_buf,message_handle handle);
+//void Com_Frame_Handle(frame_buf_t* buf, Queue_UART_STRUCT* Queue_buf,message_handle handle);
 //中断处理函数
-void Com_Cpu_Idle_Int_Handle(void);
+//void Com_Cpu_Idle_Int_Handle(void);
 
 
 
@@ -98,5 +101,9 @@ void AnswerCpu_GetInfo(uint16_t ask);
 
 //缓存初始化
 void Com_Cpu_Recive_Buff_Init(void);
+
+
+//与cpu通信串口的接收任务
+void Com_ToCPU_Recv_Task(void * parameter);
 
 #endif

@@ -21,7 +21,7 @@ const static uint8_t key_scan_line[] = {0xfe,0xfd,0xfb,0xf7,0xef,0xdf};
 // 6*6 的键盘矩阵，总共有33个按键，按键个数在h文件中定义
 static BTN_INFO g_btns_info;
 
-static uint8_t btn_start_scan = 0;   //0表示没有按键被按下，1表示按键触发中断
+//static uint8_t btn_start_scan = 0;   //0表示没有按键被按下，1表示按键触发中断
 
 TaskHandle_t  TaskHandle_key_Matrix;   //存放按键任务指针
 
@@ -185,7 +185,7 @@ char matrix_keys_scan(void)
 				}
 				
 			}
-			btn_start_scan = 0;   //按键不再扫描
+		//	btn_start_scan = 0;   //按键不再扫描
 			release_report = 0;
 		}
 	}

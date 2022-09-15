@@ -10,10 +10,7 @@ const char* g_build_time_str = "Buildtime :"__DATE__" "__TIME__;   //»ñµÃ±àÒëÊ±¼
 
 static void BoardInit(void)
 {
-//	OePins_Control_Init();   //OE ¿ÉÒÔÓÃÓÚÆÁÄ»Ï¨Ãğ
-//	LcdCtrl_Control_Init();  //lcdµçÔ´¿ØÖÆ£¬³õÊ¼»¯ºóÉèÖÃµÍ
 	//0. ÖĞ¶Ï·Ö×é³õÊ¼»¯
-	//NVIC_SetPriorityGrouping(4);  //¾ùÎª4¸öµÈ¼¶
 	nvic_priority_group_set(NVIC_PRIGROUP_PRE4_SUB0);    //2022-09-09 ÓÅÏÈ¼¶±»ÎÒĞŞ¸ÄÁË£¬ÏÖÔÚÖ»ÓĞÇÀÕ¼ÓÅÏÈ¼¶ÁË£¡£¡
 	
 	//0.1 ¸´ÓÃ¹¦ÄÜÄ£¿éÍ¨µç
@@ -22,65 +19,38 @@ static void BoardInit(void)
 	//Ö»±£Áôsw½Ó¿Ú£¬ÆäËûÓÃÓÚGPIO¶Ë¿Ú
 	gpio_pin_remap_config(GPIO_SWJ_SWDPENABLE_REMAP, ENABLE);
 	
+	//gpios.cÖĞµÄÒı½Å³õÊ¼»¯²¿·Ö
+	Gpios_init();
+	
 	//1.´®¿Ú³õÊ¼»¯
-	//#define DEBUG_COM_NUM 0   //µ÷ÊÔ´®¿ÚºÅ
-	//#define TOCPU_COM_NUM 1   //ÓëcpuÍ¨ĞÅµÄ´®¿Ú
 	Com_Debug_init(115200);
-//	gd_eval_com_init(DEBUG_COM_NUM);  //ÓÃÓÚµ÷ÊÔ
-//	gd_eval_com_init(TOCPU_COM_NUM);  //ÓÃÓÚÓëcpuÊı¾İÍ¨ĞÅ,¸Äµ½cpuÉÏµçºóÔÙ³õÊ¼»¯
 	
-	//2.systick ³õÊ¼»¯
-//	SystickConfig();
-	
-	//3.ÍøÑ¶1860µÄµçÔ´1.1vÊ¹ÄÜ¿ØÖÆ
-//	Wxen_Control_Init();
-	
-	//3.LT9211 mcu¿ØÖÆ¶ËÒı½Å³õÊ¼»¯£¬²¢¿ØÖÆLT9211¸´Î»
-//	LT9211_Mcu_ControlPort_Init();
-//	LT9211_Reset();
-	// LT9211 ¿ªÊ¼¹¤×÷
-//	LT9211_Config();
-
-	//5. ¾ØÕó°´¼üÉ¨Ãè³õÊ¼»¯
-//	matrix_keys_init();
-	
-	
-	//6. µ¥Æ¬»úÄÚ²¿ÎÂ¶È²É¼¯
-//	ADC_Init();
-	
-//	lcd_pwm_init(70);    //ÁÁ¶ÈÄ¬ÈÏÎª70% £¬´ËÊ±ÏÔÊ¾ÆÁ²»¿ªÆô£¡£¡£¡£¡
+	//ÓĞ¿´ÃÅ¹·Ó²¼şÊ±ĞèÒª³õÊ¼»¯£¬Ä¬ÈÏ²»¿ªÆô
+	hard_wtd_pins_init(); //¸´Î»Òı½ÅĞèÒª³õÊ¼»¯
+	//7´çÆÁµÄ¿ØÖÆ£¿£¿
+	//	lcd_pwm_init(70);    //ÁÁ¶ÈÄ¬ÈÏÎª70% £¬´ËÊ±ÏÔÊ¾ÆÁ²»¿ªÆô£¡£¡£¡£¡
 			
-	//10. ³õÊ¼»¯Íâ²¿Ó²¼ş¿´ÃÅ¹·£¬Ä¬ÈÏ²»¿ªÆô
-//	hard_wtd_pins_init();
+
+	key_light_leds_init();
 	
-	// 11.led³õÊ¼»¯
-//	Led_Show_Work_init();
-//	key_light_leds_init();
-	
-	//12. µçÑ¹µçÁ÷£¬ÎÂ¶È£¬iicµÄ³õÊ¼»¯
-//	lcd_reset_control_init();  //PD8 lcd¸´Î»Òı½Å¿ØÖÆ
+	//12. lcd¸´Î»Òı½Å¿ØÖÆ
+	//lcd_reset_control_init();  //PD8 lcd¸´Î»Òı½Å¿ØÖÆ
 		
-	//13.//PD6  MicCtl 	
-//	MicCtl_Control_Init();
-
-
 //	key_light_allleds_control(SET);
-//	Delay1ms(5000);
-	
-		
+	//vTaskDelay(1000);
+			
 	//15. Æô¶¯µ¥Æ¬»úÄÚ²¿¿´ÃÅ¹·
 //	iwdog_init();
 //	Delay1ms(5);
-//	Wxen_Control_Enable();    //1.1v wx1860Ê¹ÄÜ
 
-//	LcdCtrl_Enable();   //lcdµçÔ´Í¨µç
-//	Enable_LcdLight();    //¶Ô7´çÆÁµÄ¿ØÖÆĞÅºÅ£¬±³¹âÊ¹ÄÜºÍ±³¹âpwm¿ØÖÆ,
-	//9. lcd¿ØÖÆÒı½Å³õÊ¼»¯
-
-//	key_light_allleds_control(RESET);  //Ãæ°åÉÏËùÓĞµÄµÆ¶¼Ï¨Ãğ
+	LcdCtrl_Enable();   //lcdµçÔ´Í¨µç
+	//Enable_LcdLight();    //¶Ô7´çÆÁµÄ¿ØÖÆĞÅºÅ£¬±³¹âÊ¹ÄÜºÍ±³¹âpwm¿ØÖÆ,
 	
-//	OePins_Output_Hight(3);   //ÆÁÄ»µãÁÁ Í¨¹ıOE3¿ØÖÆµÄcpu·¢³öµÄpwm
+	//9. lcd¿ØÖÆÒı½Å³õÊ¼»¯	
+	OePins_Output_Hight(3);   //ÆÁÄ»µãÁÁ Í¨¹ıOE3¿ØÖÆµÄcpu·¢³öµÄpwm
 		
+	//10.Ãæ°åÉÏËùÓĞµÄµÆ¶¼Ï¨Ãğ
+//	key_light_allleds_control(RESET);  //Ãæ°åÉÏËùÓĞµÄµÆ¶¼Ï¨Ãğ	
 }
 
 
@@ -107,19 +77,20 @@ int main(void)
 	printf("init ok!!\r\n");
 	printf("%s\r\n", g_build_time_str);   //´ËÊ±»¹Ã»ÓĞ´òÓ¡ÈÎÎñ£¬²»Òª´òÓ¡Ì«¶àÊı¾İ
 	
+	//1.¹¤×÷µÆµÄÈÎÎñ
 	xTaskCreate(Task_Led_Show_Work,"TaskLed1",configMINIMAL_STACK_SIZE,NULL,2,NULL);
+	//2.µ÷ÊÔ´®¿Ú½ÓÊÕÈÎÎñ
+	xTaskCreate(Com_Debug_Recv_Task,"debugr",configMINIMAL_STACK_SIZE,NULL,2,NULL);  //µ÷ÊÔ´®¿Ú½ÓÊÕÈÎÎñ
 
-//	xTaskCreate(Com_Debug_Print_Task,"debug",configMINIMAL_STACK_SIZE,NULL,1,NULL);  //µ÷ÊÔ´®¿Ú´òÓ¡ÈÎÎñ
-	xTaskCreate(Com_Debug_Recv_Task,"debugr",configMINIMAL_STACK_SIZE,NULL,1,NULL);  //µ÷ÊÔ´®¿Ú½ÓÊÕÈÎÎñ
-//	xTaskCreate(Com_Debug_Task,"debug",configMINIMAL_STACK_SIZE,NULL,1,&TaskHandle_Debug_Com);  //µ÷ÊÔ´®¿ÚÈÎÎñ
+	//3. 9211Ö»ĞèÒª³õÊ¼»¯£¬´´½¨ÈÎÎñºó×Ô¼ºÉ¾³ı×Ô¼º
+	xTaskCreate(LT9211_Once_Task,"lt9211",configMINIMAL_STACK_SIZE,NULL,4,NULL);
+	//4. ÓÅÏÈ¼¶Òª¸ßÒ»µã£¬²»È»ÈİÒ×ÒıÆğcpu¶Ë³¬Ê±´íÎó
+	xTaskCreate(Com_ToCPU_Recv_Task,"ToCpu",configMINIMAL_STACK_SIZE,NULL,4,&TaskHandle_ToCpu_Com);  //cpuÍ¨ĞÅ´®¿ÚÈÎÎñ£¬ÓÅÏÈ¼¶¸ßÒ»µã
+	//5. ¾ØÕó¼üÅÌÉ¨ÃèÈÎÎñ
+	xTaskCreate(task_matrix_keys_scan,"key_bod",configMINIMAL_STACK_SIZE,NULL,3,&TaskHandle_key_Matrix);  //¾ØÕó¼üÅÌÉ¨ÃèÈÎÎñ
 	
-	
-	xTaskCreate(task_matrix_keys_scan,"key_bod",configMINIMAL_STACK_SIZE,NULL,2,&TaskHandle_key_Matrix);  //¾ØÕó¼üÅÌÉ¨ÃèÈÎÎñ
-	
-	
-//	xTaskCreate(Task_Led1,"TaskLed1",configMINIMAL_STACK_SIZE,NULL,2,NULL);	
-//	xTaskCreate(Task_Led2,"TaskLed2",configMINIMAL_STACK_SIZE,NULL,2,NULL);
-	
+	//6.»ñÈ¡µ¥Æ¬»úÄÚ²¿ÎÂ¶ÈµÄÈÎÎñ
+	xTaskCreate(Inter_Temp_task,"temp",configMINIMAL_STACK_SIZE,NULL,2,NULL);
 
 	
 	vTaskStartScheduler();
