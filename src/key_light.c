@@ -39,8 +39,13 @@
 
 
 static uint8_t g_led_pwm = 100;
-static uint32_t leds_status = 0;   //每一位表示一个led的状态，共计32个。1表示亮，0表示灭
-#define PWM_HZ 100   //led的pwm为100HZ，，定时器每10ms进入一次，即为100HZ 如果要改频率得改定时器进入的时间
+static uint64_t leds_status = 0;   //每一位表示一个led的状态，共计45个。1表示亮，0表示灭
+#define LEDS_PWM_HZ 20   //20表示led的pwm为50HZ，定时器每1ms进入一次
+
+
+//2022-09-16 改由timer1 产生中断信号，来修改pwm的输出值
+//只是用于计时，就使用tim1了，
+static void TIM1_Led_Pwm_Init(uint16_t arr,uint16_t psc);
 
 
 void key_light_leds_init(void)
@@ -68,9 +73,11 @@ void key_light_leds_init(void)
 	//2.0 上电控制引脚
 	gpio_init(GPIOE, GPIO_MODE_OUT_PP, GPIO_OSPEED_2MHZ, GPIO_PIN_8 | GPIO_PIN_9);  //控制输出	
 	//2. 初始化后，默认输出高
-	gpio_bit_set(GPIOE, GPIO_PIN_8 | GPIO_PIN_9);
-	
+	gpio_bit_set(GPIOE, GPIO_PIN_8 | GPIO_PIN_9);   //PE9 是pwm引脚，需要设置为高！！！2022-09-16	
 	//PE9 是pwm控制，现在输出高，全亮
+	
+	//用于控制PE9的PWM定时器初始化，并没有开启定时器！！
+	TIM1_Led_Pwm_Init(1000-1,(SystemCoreClock/1000000)-1);  //1ms 计时	
 }
 
 
@@ -162,7 +169,7 @@ void key_light_leds_control(uint8_t whichled,uint8_t status)
 		gpio_bit_set(GPIOD, GPIO_PIN_14);
 		
 		if(whichled == 40)  //记录led的状态
-			leds_status = 0xffffffff;	 //全部开启
+			leds_status = ~0ULL;	 //全部开启
 		else
 			leds_status |= 1<<whichled;
 	}
@@ -185,8 +192,9 @@ void key_light_leds_control(uint8_t whichled,uint8_t status)
 //返回255表示错误，0，1表示正确
 uint8_t get_led_status(uint8_t whichled)
 {
-	if(whichled > 40)  //whichled>0 && 
+	if(whichled > 50)  //由之前的40改为50，2022-09-16 
 	{
+		debug_printf_string("error:get_led_status whichled > 40!!\r\n");
 		return 255;		
 	}	
 	return (leds_status>>whichled) & 1;	
@@ -201,17 +209,21 @@ void key_light_allleds_control(uint8_t status)
 }
 
 
-//设置led的亮度 [0-100]
-void set_Led_Pwm(uint8_t pwm)
-{
-	if(pwm > 100)
-		pwm = 100;
-	
-	g_led_pwm = pwm;
-	
-	MY_PRINTF("set_Led_Pwm  g_led_pwm = %d\r\n",g_led_pwm);
-}
 
+//-----------------------------------------------------------------------------------
+//led的pwm控制
+
+//定时器开启或者关闭 1为开启，0为关闭
+static void Pwm_Timer_Control(uint8_t enable)
+{
+	if(enable)
+	{
+		//启动定时器1
+		timer_enable(TIMER1);
+	}
+	else
+		timer_disable(TIMER1);
+}
 
 
 //对按键面板上 led_PWM 引脚的控制
@@ -225,32 +237,111 @@ static void led_pwm_pin_control(uint8_t status)
 
 
 
-//100HZ的频率，10ms进入一次
-void laser_run_pwm_task(void)
+//设置led的亮度 [0-100]
+void set_Led_Pwm(uint8_t pwm)
 {
-	static uint16_t count = 0;
-//	uint8_t i;
-		
+	if(pwm > 100)
+		pwm = 100;
 	
-	if(count <= PWM_HZ)
-	{		
-		//只在某一点控制引脚拉高拉低
-		if(g_led_pwm == count) //计数值count比设定值led_pwm要大，关闭
-		{  //
-			led_pwm_pin_control(0);   //输出低
-		}
-		else if(0 == count)  //在0点点亮
-			led_pwm_pin_control(1);  //输出高
+	g_led_pwm = pwm/5;  //限制在0-20
+
+	if(pwm == 100) //不用开定时器
+	{
+		Pwm_Timer_Control(RESET);  //定时器关闭
+		led_pwm_pin_control(SET);  //引脚输出高
 	}
-//	else
-//	{
-//		count = 0;   //一个周期结束，重新开始下一个周期
-//		return;   //刚刚清零就不用去加了
-//	}
-	count++;
-	if(count>PWM_HZ)
-		count = 0;
+	else //开启定时器
+	{
+		Pwm_Timer_Control(SET);  //定时器开启
+	}
+	
+//	MY_PRINTF("set_Led_Pwm  g_led_pwm = %d\r\n",pwm);
 }
+
+
+
+
+
+
+
+//2022-09-16 改由timer1 产生中断信号，来修改pwm的输出值
+//只是用于计时，就使用tim1了，
+static void TIM1_Led_Pwm_Init(uint16_t arr,uint16_t psc)
+{
+	timer_parameter_struct initpara;
+	//接收部分
+	rcu_periph_clock_enable(RCU_TIMER1);  //定时器模块时钟使能
+
+	//3. 初始化定时器的数据结构  /* initialize TIMER init parameter struct */
+	timer_struct_para_init(&initpara);
+	initpara.period = arr;  //重载的数字，
+	initpara.prescaler = psc;  //预分频数，得到是1Mhz的脉
+	//4. 初始化定时器      /* initialize TIMER counter */
+	timer_init(TIMER1, &initpara);
+
+	nvic_irq_enable(TIMER1_IRQn, 7U, 0U);  //现在只有抢占优先级了。
+	timer_interrupt_enable(TIMER1, TIMER_INT_UP);   //定时中断	
+}
+
+
+//定时器1的中断处理，目前是pwm
+void TIMER1_IRQHandler(void)
+{
+	static uint8_t count = 0;
+	
+	if(timer_interrupt_flag_get(TIMER1,TIMER_INT_FLAG_UP)!=RESET)
+	{		
+		count++;  //1ms 已过去			
+		if(count <= LEDS_PWM_HZ)
+		{
+			//只在某一点控制引脚拉高拉低
+			if(g_led_pwm == count) //计数值count比设定值led_pwm要大，关闭
+			{  //
+				led_pwm_pin_control(0);   //输出低
+			}
+			else if(1 == count)  //在0点点亮
+				led_pwm_pin_control(1);  //输出高
+			}
+		else 
+		{
+			count = 0;   //一个周期结束，重新开始下一个周期
+		//	return;   //刚刚清零就不用去加了
+		}				
+	}
+	timer_interrupt_flag_clear(TIMER1,TIMER_INT_FLAG_UP);	
+}
+
+
+
+
+
+
+//100HZ的频率，10ms进入一次
+//void laser_run_pwm_task(void)
+//{
+//	static uint16_t count = 0;
+////	uint8_t i;
+//		
+//	
+//	if(count <= PWM_HZ)
+//	{		
+//		//只在某一点控制引脚拉高拉低
+//		if(g_led_pwm == count) //计数值count比设定值led_pwm要大，关闭
+//		{  //
+//			led_pwm_pin_control(0);   //输出低
+//		}
+//		else if(0 == count)  //在0点点亮
+//			led_pwm_pin_control(1);  //输出高
+//	}
+////	else
+////	{
+////		count = 0;   //一个周期结束，重新开始下一个周期
+////		return;   //刚刚清零就不用去加了
+////	}
+//	count++;
+//	if(count>PWM_HZ)
+//		count = 0;
+//}
 
 
 

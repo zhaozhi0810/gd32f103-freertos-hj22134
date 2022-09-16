@@ -182,7 +182,7 @@ void Enable_LcdLight(void)
 	vTaskDelay(100);
 	//gpio_bit_set(GPIOB, GPIO_PIN_14);   //开启背光使能
 	Enable_Lcd_Power();
-	MY_PRINTF("Enable_LcdLight\r\n");
+	debug_printf_string("Enable_LcdLight\r\n");
 }
 
 
@@ -201,7 +201,7 @@ void Disable_LcdLight(void)
 //	Disable_Lcd_PdN();     //lvds 转换功能关闭
 	Disable_Lcd_Power();   //lcd电源关闭
 		
-	MY_PRINTF("Disable_LcdLight\r\n");
+	debug_printf_string("Disable_LcdLight\r\n");
 }
 
 

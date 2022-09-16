@@ -1,17 +1,7 @@
 
 /*
-用于处理与cpu之间的串口通信
+用于调试的串口通信
 	串口为GD32的串口1，115200，8N1
-
-
-调试串口接收的命令：
-0.软件编译时间字符串
-1.电压电流
-2.cpu和主板温度，液晶屏温度，及lcd加热状态，风扇pwm值（io模式下只有0和100）
-3.lcd的亮度值，屏的加电引脚状态，pd_n的状态
-4.4路di值，4路光通路信息
-5.硬件看门狗状态，（信号源，暂无）
-6.cpu运行状态。（开机关机，重启，进入pmon，进入系统等）
 
 不能识别的命令也是打印提示和编译时间字符串
 
@@ -40,51 +30,17 @@
 
 #define DEBUG_UART_BAUD_RATE 115200
 
-#define DEBUG_UART_SEND_BIT (1<<0)
-#define DEBUG_UART_RECV_BIT (1<<1)
-
-//#define RECV_BUF_LEN 64
-#if 0
-static Queue_UART_STRUCT g_Queue_Debug_Recv;   //接收Debug数据队列，用于接收中断
-
-frame_buf_t g_com_debug_buf={{0},FRAME_LENGHT};    //数据处理缓存
-#endif
-
-//static char* g_Cpu_Run_Status_str[] = {
-//	"LS3A_POWER_DISABLE",   //确认是断电状态
-//	"LS3A_POWEROFF",    //关机，断电
-//	"LS3A_REBOOT",    //重启
-//	"LS3A_RUNNING",    //进入pmon
-//	"LS3A_RUN_OS",      //离开pmon，进入操作系统
-//	"LS3A_POWER_ENABLE"     //已经通电，但是没有进入PMON的前一段;
-//};
-
 
 static StreamBufferHandle_t _uart_tx_StreamBuffer_Handle;
 static StreamBufferHandle_t _uart_rx_StreamBuffer_Handle;
-//static QueueHandle_t _uart_write_mutex_Handle;
-//static SemaphoreHandle_t xSemaphore;
-
-//TaskHandle_t  TaskHandle_Debug_Com;   //存放调试串口任务指针
-
 
 
 void Com_Debug_init(uint32_t bandrate)
 {
 	gd_eval_com_init(DEBUG_COM_NUM,DEBUG_UART_BAUD_RATE);  //用于调试
 	
-		// Disable stream buffers so I/O occurs immediately
-//	setvbuf(stdin,  NULL, _IONBF, 0); // should be a read-only stream
-//	setvbuf(stdout, NULL, _IONBF, 0); // disables wait for \n before printing
-//	setvbuf(stderr, NULL, _IONBF, 0); // should be already unbuffered
-	
-	
-	// Initialise transmit and receive message queues
 	_uart_tx_StreamBuffer_Handle = xStreamBufferCreate(64, 1);  //缓冲大小，触发字节数
 	_uart_rx_StreamBuffer_Handle = xStreamBufferCreate(64,  1);
-
-	// Initialise write mutex  QueueHandle_t xQueueCreateMutex
-	//xSemaphore  = xSemaphoreCreateMutex() ;//xQueueCreateMutex(queueQUEUE_TYPE_MUTEX);
 
 }
 
@@ -108,15 +64,10 @@ void Com_Debug_init(uint32_t bandrate)
 
 static int __io_putchar(int c)
 {
-    // Queue char for transmission, block if queue full
-//    osMessageQueuePut(_uart_tx_queue_id, &c, 0U, osWaitForever);
 	const TickType_t x10ms = pdMS_TO_TICKS( 10 );
 	
 	xStreamBufferSend(_uart_tx_StreamBuffer_Handle,&c,1,x10ms);  //一直等待，直到成功，感觉可能有点问题
-//	xTaskNotify(TaskHandle_Debug_Com, DEBUG_UART_SEND_BIT, eSetBits);  //唤醒休眠的任务
-	
-    // Enable TXE interrupt
-    //LL_USART_EnableIT_TXE(USARTx_INSTANCE); 
+
 	usart_interrupt_enable(EVAL_COM0, USART_INT_TBE);    //发送缓存空的中断
     return c;
 }
@@ -127,12 +78,11 @@ int __io_getchar(void)
     uint8_t dat;
 
 	dat = (uint8_t)usart_data_receive(EVAL_COM0);//(USART3); 
-		
-	//static uint8_t c;
+
 	BaseType_t xHigherPriorityTaskWoken = pdFALSE;  //要不要切换任务，属于返回参数
-//    osMessageQueueGet(_uart_rx_queue_id, &c, NULL, osWaitForever);
+
 	xStreamBufferSendFromISR(_uart_rx_StreamBuffer_Handle,&dat,1,&xHigherPriorityTaskWoken);  //读出串口的数据，写入buf
-	//xStreamBufferReceiveFromISR
+
     return dat;
 }
 
@@ -313,25 +263,6 @@ static void Com_Debug_Message_Handle1(uint8_t buf)
 }
 
 
-/*
-	串口数据接收中断：
-		前提：每一帧都是7个字节。
-		队列中保存帧头，有后面的数据和校验和（共7个字节）
-*/
-//void Com_Debug_Rne_Int_Handle(void)
-//{
-//	uint8_t dat;
-
-//	dat = (uint8_t)usart_data_receive(EVAL_COM0);//(USART3);  
-//	Com_Debug_Message_Handle1(dat);   //直接处理
-////	QueueUARTDataInsert(&g_Queue_Debug_Recv,dat);   //接收的数据存入队列中。
-//}
-
-
-
-
-
-
 
 static void _uart_error(void)
 {
@@ -419,8 +350,7 @@ void USART0_IRQHandler(void)
 void Com_Debug_Recv_Task(void * parameter)
 {      
 	uint8_t c;
-//	BaseType_t xHigherPriorityTaskWoken = portMAX_DELAY;  //无限制等待
-//	vTaskDelay(20000);	
+
 	while(1)
 	{		
 		if(xStreamBufferReceive(_uart_rx_StreamBuffer_Handle,&c,1,portMAX_DELAY))
@@ -433,6 +363,20 @@ void Com_Debug_Recv_Task(void * parameter)
 		}
 	}         
 }
+
+
+
+
+//调试串口输出printf
+/* retarget the C library printf function to the USART */
+int fputc(int ch, FILE *f)
+{
+    __io_putchar(ch);
+	return ch;
+}
+
+
+
 
 
 
@@ -527,93 +471,5 @@ void Com_Debug_Recv_Task(void * parameter)
 
 
 
-
-//调试串口输出printf
-/* retarget the C library printf function to the USART */
-int fputc(int ch, FILE *f)
-{
-	//Uart_Tx(DEBUG_COM_NUM, ch);   //从串口0输出
-    __io_putchar(ch);
-	return ch;
-}
-
-
-
-
-/*
-	串口收到命令后的处理。串口的空闲中断处理函数调用
-		前提： 收到完整的数据包，校验和正确。
-
-	单片机能够收到的命令：
-	// 1.设置视频源,没有该功能
-	4.设置lcd的pwm（亮度）
-	5.关机或重启命令。
-
-*/
-
-#if 0
-
-static void Com_Debug_Message_Handle(uint8_t* buf)
-{		
-	com_frame_t* pdata = (com_frame_t*)(buf+1);    //+1是跳过帧头，使用结构体初始化
-	int8_t t;
-	
-	switch(pdata->data_type)
-    {
-        case eMCU_CMD_TYPE:    //cpu发送给单片机的都是cmd！！
-            t = pdata->data.cmd.cmd;
-            switch(t)
-            {
-				case eMCU_CPUGETINFO_CMD:   //获取设备信息的命令
-				//	AnswerCpu_GetInfo(pdata->data.cmd.param1<<8 | pdata->data.cmd.param2); //使用函数解析，并返回数据
-					break;
-				case eMCU_CPUSET_CMD:    //设置屏幕亮度
-					if(pdata->data.cmd.param1 == eMCU_LCD_SETPWM_CMD)
-					{
-						t = pdata->data.cmd.param2;   //这个值可正可负，根据它的正负来调亮或者灭
-						t = g_lcd_pwm + t;   //计算得出新的结果
-						Lcd_pwm_out(t);     //重新设置pwm的值
-				//		AnswerCpu_Status(eUART_SUCCESS);   //应答成功
-					}
-					else if(pdata->data.cmd.param1 == eMCU_SWITCH_DVI_SRC_CMD) //切换视频源
-					{
-						t = pdata->data.cmd.param2;  //0 为本地，1为外部
-//						if(t)
-//							dvi_switch_set(DVI_OTHER);   //设置后会上报给cpu
-//						else
-//							dvi_switch_set(DVI_LOONGSON);   //本地视频
-				//		AnswerCpu_Status(eUART_SUCCESS);   //应答成功
-					}
-					else	
-				//		AnswerCpu_Status(eUART_ERR_PARAM);  //应答参数错误				
-				break;
-                default:
-					DBG_PRINTF("ERROR: %s\n","eUART_ERR_PARAM");
-				//	AnswerCpu_Status(eUART_ERR_PARAM);  //应答参数错误
-                break;
-            }
-
-        break;
-        default:
-			DBG_PRINTF("ERROR: %s\n","eUART_ERR_CMD_UNKNOW");
-		//	AnswerCpu_Status(eUART_ERR_CMD_UNKNOW);  //应答命令未知 
-        break;
-    }	
-}
-#endif
-
-
-
-/*
-	串口空闲中断的处理,调试串口不再开启空闲中断
-
-	1.判断接收到的字节数，>=7 表示正常
-	2.正常就继续处理，读出7个字节，计算校验和，
-	3.校验和正确，则处理命令
-*/
-void Com_Debug_Idle_Int_Handle(void)
-{
-//	Com_Frame_Handle(&g_com_debug_buf, &g_Queue_Debug_Recv,Com_Debug_Message_Handle);
-}
 
 

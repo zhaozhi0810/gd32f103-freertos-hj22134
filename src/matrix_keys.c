@@ -13,15 +13,12 @@
 #define KEYS_IIC_ADDR (0)  //只表示A2A1A0 3个引脚的值
 #define NCA9555_IIC_CONTROLER  IIC3_INDEX   //对应外部中断13  2021-12-07
 
-
 		
 //只有6行，这些数字用于分别扫描每一行
 const static uint8_t key_scan_line[] = {0xfe,0xfd,0xfb,0xf7,0xef,0xdf};
 
 // 6*6 的键盘矩阵，总共有33个按键，按键个数在h文件中定义
 static BTN_INFO g_btns_info;
-
-//static uint8_t btn_start_scan = 0;   //0表示没有按键被按下，1表示按键触发中断
 
 TaskHandle_t  TaskHandle_key_Matrix;   //存放按键任务指针
 
@@ -73,7 +70,7 @@ void matrix_keys_init(void)
 
 
 
-uint8_t matrix_keys_row_scan(void)
+static uint8_t matrix_keys_row_scan(void)
 {
 	uint8_t key_row_dat;
 	
@@ -96,18 +93,7 @@ uint8_t matrix_keys_row_scan(void)
 	}
 }
 
-
-
-
-//const uint8_t key_t_code[] = {1,7,13,19,25,31, 
-//							 2,8,14,20,26,32,
-//							 3,9,15,21,27,33,
-//							 4,10,16,22,28,34,
-//							5,11,17,23,29,35,
-//							6,12,18,24,30,36
-//							};
-
-							
+				
 							
 
 /***
@@ -117,7 +103,6 @@ uint8_t matrix_keys_row_scan(void)
  */
 char matrix_keys_scan(void)
 {    
-//    uint8_t Key_Num=0xff;            //1-16对应的按键数
     uint8_t key_row_num=0;        //行扫描结果记录
     uint8_t i,j;
 	uint8_t index;   //
@@ -200,15 +185,28 @@ char matrix_keys_scan(void)
 
 #ifdef 	BTNS_USE_INT
 //外部中断12的处理函数,按键按下和松开都会触发中断！！！！
-void exint12_handle(void)
+static void exint12_handle(void)
 {
-//	btn_start_scan = 5;
+
 	BaseType_t xHigherPriorityTaskWoken = pdFALSE;
 	
 	xTaskNotifyFromISR(TaskHandle_key_Matrix, 0, eIncrement, &xHigherPriorityTaskWoken);  //唤醒休眠的任务
 	//并且禁止中断
 	exti_interrupt_disable(EXTI_12);   //扫描完毕之后再使能
 }
+
+
+
+void EXTI10_15_IRQHandler(void)
+{
+	if(exti_interrupt_flag_get(EXTI_12))
+	{
+		exti_interrupt_flag_clear(EXTI_12);  //清冲断标志
+		exint12_handle();
+		//	exint456_handle();
+	}
+}
+
 
 #endif
 
@@ -221,16 +219,13 @@ void exint12_handle(void)
 */
 void task_matrix_keys_scan(void* arg)
 {	
-	//5. 矩阵按键扫描初始化
+	//1. 矩阵按键扫描初始化
 	matrix_keys_init();
 
 	while(1)
 	{	
 		//等待任务被唤醒
 		ulTaskNotifyTake(pdFALSE, portMAX_DELAY);   //减1，然后无限等待
-		
-//		printf("x\r\n");
-	//	if(btn_start_scan--) //外部（按下和松开都会触发）中断触发后，不为0.
 		{	
 			matrix_keys_scan();
 
@@ -239,10 +234,8 @@ void task_matrix_keys_scan(void* arg)
 			exti_interrupt_enable(EXTI_12);   //扫描完毕之后再使能		
 #endif
 
-		}
-		
+		}		
 	}
-
 }
 
 

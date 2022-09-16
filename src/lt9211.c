@@ -773,6 +773,8 @@ void LT9211_Config(void)
 { 
 //	if(cmd_init_9211)
 	{
+		key_light_allleds_control(SET);
+		
 		lcd_reset_control();   //lcd的复位引脚控制PD8 gpios.c
 	
 		LT9211_Reset();
@@ -784,6 +786,11 @@ void LT9211_Config(void)
 		LT9211_Init();
 #endif
 //		cmd_init_9211 = 0;
+		
+		key_light_allleds_control(RESET);  //关闭所有的键灯
+
+		//这个用于点亮屏幕，尽量晚一点时间2022-09-16
+		OePins_Output_Hight(3);   //屏幕点亮 通过OE3控制的cpu发出的pwm
 	}
 }
 

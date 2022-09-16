@@ -7,10 +7,6 @@
 #define IIC_DELAY_CONT 2   //用于延时程序,GD32达到了108M，所以设置为2（待定），默认72M可以设置为0
 
 
-//#define Delay1us vTaskDelay
-
-
-
 static void Sda_In(iic_index_t index)
 {
 	if(index == IIC2_INDEX)
@@ -95,13 +91,6 @@ static uint8_t Read_Sda(iic_index_t index)
 	else 
 		return gpio_input_bit_get(GPIOB,GPIO_PIN_7);
 }
-
-
-//static void delay_i2c(uint32_t nCount)
-//{
-//	nCount=nCount*4;
-//  for(; nCount != 0; nCount--);
-//}
 
 
 

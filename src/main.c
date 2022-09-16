@@ -22,35 +22,22 @@ static void BoardInit(void)
 	//gpios.c中的引脚初始化部分
 	Gpios_init();
 	
-	//1.串口初始化
+	//1.调试串口初始化
 	Com_Debug_init(115200);
 	
-	//有看门狗硬件时需要初始化，默认不开启
-	hard_wtd_pins_init(); //复位引脚需要初始化
+	//看门狗硬件 和 单片机软看门狗 时需要初始化，默认开启
+	hard_wtd_pins_init(); //单片机复位核心板引脚需要初始化
 	//7寸屏的控制？？
 	//	lcd_pwm_init(70);    //亮度默认为70% ，此时显示屏不开启！！！！
 			
 	//键灯引脚控制
 	key_light_leds_init();  
 	
-	//12. lcd复位引脚控制
-	//lcd_reset_control_init();  //PD8 lcd复位引脚控制
 		
-//	key_light_allleds_control(SET);
-	//vTaskDelay(1000);
-			
 	//15. 启动单片机内部看门狗
 //	iwdog_init();
 //	Delay1ms(5);
 
-	LcdCtrl_Enable();   //lcd电源通电
-	//Enable_LcdLight();    //对7寸屏的控制信号，背光使能和背光pwm控制,
-	
-	//9. lcd控制引脚初始化	
-	OePins_Output_Hight(3);   //屏幕点亮 通过OE3控制的cpu发出的pwm
-		
-	//10.面板上所有的灯都熄灭
-//	key_light_allleds_control(RESET);  //面板上所有的灯都熄灭	
 }
 
 
@@ -74,7 +61,7 @@ int main(void)
 {
 	BoardInit();
 	
-	debug_printf_string("init ok!!\r\n");
+	debug_printf_string("freertos , init ok!!\r\n");
 	debug_printf_string((char*)g_build_time_str);   //此时还没有打印任务，不要打印太多数据
 	debug_printf_string("\r\n");
 	

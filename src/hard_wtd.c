@@ -52,6 +52,8 @@ void hard_wtd_disable(void)
 		vTaskDelete(TaskHandle_Hard_Wtd);
 }
 
+
+#ifdef HAVE_HWTD
 //固定喂狗，1s喂狗一次
 static void hard_wtd_feed_internel(void)
 {
@@ -64,7 +66,7 @@ static void hard_wtd_feed_internel(void)
 	
 //	debug_printf_string("hard_wtd_feed_internel\r\n");
 }
-
+#endif
 
 //cpu喂狗一次，就是把时间重新赋值为最大值
 void hard_wtd_feed(void)

@@ -2,7 +2,10 @@
 
 static char InfoBuffer[256];
 
-//query任务函数
+
+//注释的代码中包含了一些任务管理的方法，建议先不删除！！！！！
+
+
 void query_task(void)
 {  
 //	uint8_t i =0 ;

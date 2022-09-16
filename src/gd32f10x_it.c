@@ -207,18 +207,7 @@ void exint12_handle(void);
 //}
 
 
-void EXTI10_15_IRQHandler(void)
-{
-	if(exti_interrupt_flag_get(EXTI_12))
-	{
-		exti_interrupt_flag_clear(EXTI_12);  //清冲断标志
-#ifdef BTNS_USE_INT 
-		exint12_handle();
-#endif
-		//	exint456_handle();
-	}
 
-}
 
 //中断处理函数
 //void exint456_handle(void);
