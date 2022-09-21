@@ -483,7 +483,7 @@ void LT9211_TxDigital(void)
 	{
 		debug_printf_string("\rLT9211 set to OUTPUT_LVDS");
 		HDMI_WriteI2C_Byte(0xff,0x85); /* lvds tx controller */
-		HDMI_WriteI2C_Byte(0x59,0x40); 	//bit4-LVDSTX Display color depth set 1-8bit, 0-6bit; 
+		HDMI_WriteI2C_Byte(0x59,0x50); 	//bit4-LVDSTX Display color depth set 1-8bit(0x50), 0-6bit(0x40); 
 		HDMI_WriteI2C_Byte(0x5a,0xaa); 
 		HDMI_WriteI2C_Byte(0x5b,0xaa);
 		if( LT9211_OutPutModde == OUTPUT_LVDS_2_PORT )
@@ -801,10 +801,15 @@ void LT9211_Once_Task(void* arg)
 	LT9211_Mcu_ControlPort_Init();
 	vTaskDelay(10);
 	LT9211_Config();
+	
+	
+	Enable_LcdLight();
 	//while(1)
 	{
 		vTaskDelay(1000);
 	}
+	
+	
 	vTaskDelete(NULL);  //删除自己
 }
 

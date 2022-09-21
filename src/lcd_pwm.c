@@ -7,7 +7,7 @@
 	需要使用定时器0CH2N。  GPB15   （GD32定时器从0开始编号，stm32从1开始编号）
 
 	主要是
-	1.pwm控制LCD亮度
+	1.pwm控制LCD亮度  PB14
 	2.背光电源使能引脚 PB14
 
 
@@ -22,9 +22,13 @@
 #include "includes.h"
 
 	
-static uint16_t PWM_DEGREE_MAX = 4000;   //PWM频率  1us计个数，4000计算的频率就是1000000/4000=250Hz 太高了影响电磁兼容实验？？？
+static uint16_t PWM_DEGREE_MAX = 100;   //PWM频率  1us计个数，4000计算的频率就是1000000/4000=250Hz 太高了影响电磁兼容实验？？？
 uint8_t g_lcd_pwm = 100;
 
+//PB14 timer11 ch0,timer0 ch1_ON
+//PB15 timer11 ch1,timer0 ch2_ON
+
+#define LCD_PWM_POWER_VOL_PORT GPIO_PIN_14
 #define LCD_PWM_PIN GPIO_PIN_15
 #define LCD_PWM_PORT GPIOB
 #define LCD_PWM_PORT_RCU RCU_GPIOB
@@ -116,11 +120,11 @@ void lcd_pwm_init(uint8_t degree)
 #endif
 
 	//*******以下为背光使能控制。	
-	gpio_init(GPIOB, GPIO_MODE_OUT_PP, GPIO_OSPEED_2MHZ, GPIO_PIN_14);
-	gpio_bit_reset(GPIOB, GPIO_PIN_14);   //初始化后，输出高电平，默认点亮背光
+	gpio_init(GPIOB, GPIO_MODE_OUT_PP, GPIO_OSPEED_2MHZ, LCD_PWM_POWER_VOL_PORT);
+	gpio_bit_reset(GPIOB, LCD_PWM_POWER_VOL_PORT);   //初始化后，输出高电平，默认点亮背光
 
 	//禁止背光显示，通电前一段时间，屏幕显示条纹。
-	Disable_LcdLight();
+	//Disable_LcdLight();
 }
 
 
@@ -129,20 +133,20 @@ void lcd_pwm_init(uint8_t degree)
 void Enable_Lcd_Power(void)
 {
 	LcdCtrl_Enable();  //pe15
-	gpio_bit_set(GPIOB, GPIO_PIN_14);
+	gpio_bit_set(GPIOB, LCD_PWM_POWER_VOL_PORT);  //PB14
 }
 
 //关闭LCD电源
 void Disable_Lcd_Power(void)
 {
 	LcdCtrl_Disable();  //pe15
-	gpio_bit_reset(GPIOB, GPIO_PIN_14);
+	gpio_bit_reset(GPIOB, LCD_PWM_POWER_VOL_PORT);   //PB14
 }
 
 
 uint8_t Get_Lcd_Power_Status(void)
 {
-	return gpio_output_bit_get(GPIOB, GPIO_PIN_14);	
+	return gpio_output_bit_get(GPIOB, LCD_PWM_POWER_VOL_PORT);	
 }
 
 

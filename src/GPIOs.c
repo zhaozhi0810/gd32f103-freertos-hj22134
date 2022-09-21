@@ -96,17 +96,37 @@ static void LcdCtrl_Control_Init(void)
 
 
 
+static void Lcd7INCtrl_PwmPins_Init(void)
+{
+	//1. 时钟使能
+	rcu_periph_clock_enable(RCU_GPIOB);
+		
+	//2.0 上电控制引脚
+	gpio_init(GPIOB, GPIO_MODE_OUT_PP, GPIO_OSPEED_2MHZ, GPIO_PIN_14|GPIO_PIN_15);  //控制输出	
+	//2. 初始化后，默认输出高
+	gpio_bit_set(GPIOB, GPIO_PIN_14|GPIO_PIN_15);  //LcdCtrl 输出低
+
+}
+
+
+
+
 //gpio 引脚初始化
 void Gpios_init(void)
 {
 //	Wxen_Control_Init();   //2022-09-15 不初始化反而能正常使用
+	lcd_pwm_init(70);
+	
 	MicCtl_Control_Init();   //MIC_CRL 引脚的初始化
 	lcd_reset_control_init();  //lcd 复位引脚的初始化
 	OePins_Control_Init();    //OE引脚的初始化
 
-	//LcdCtrl_Control_Init();   //7寸屏电源控制引脚  		
-	//LcdCtrl_Enable();   //7寸屏lcd电源通电
-	//Enable_LcdLight();    //对7寸屏的控制信号，背光使能和背光pwm控制,		
+	LcdCtrl_Control_Init();   //7寸屏电源控制引脚  		
+//	LcdCtrl_Enable();   //7寸屏lcd电源通电
+//	Enable_LcdLight();    //对7寸屏的控制信号，背光使能和背光pwm控制,	
+
+//	LcdCtrl_Control_Init();	    //
+	//Lcd7INCtrl_PwmPins_Init();	
 }
 
 

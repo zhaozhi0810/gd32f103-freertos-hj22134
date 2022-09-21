@@ -218,27 +218,27 @@ static void Com_Debug_Message_Handle1(uint8_t buf)
 			debug_printf_string("ERROR: Command Unknow \r\n");   //不能识别的命令
 			Com_Debug_Print_Help();
 		case '0':
+			debug_printf_string("FreeRTOS ");
 			debug_printf_string((char*)g_build_time_str);  //打印编译的时间
 			debug_printf_string("\r\n");
 			debug_printf_string("Author:JC&DaZhi <vx:285408136>\r\n"); 
 		break;
 		case '1':
-//			if(g_lcd_pwm < 100)
-//			{
-//				Lcd_pwm_out(g_lcd_pwm + 10);   //屏幕亮度加10
-//				debug_printf_string("increase 7 inch lcd PWM\r\n");
-//			}
-//			else
+			if(g_lcd_pwm < 100)
+			{
+				Lcd_pwm_out(g_lcd_pwm + 10);   //屏幕亮度加10
+				debug_printf_string("increase 7 inch lcd PWM\r\n");
+			}
+			else
 				debug_printf_string("g_lcd_pwm = 100\r\n");
 			break;
 		case '2':
-			//打印温度值
-//			if(g_lcd_pwm >= 10)
-//			{
-//				Lcd_pwm_out(g_lcd_pwm - 10);   //屏幕亮度加10
-//				debug_printf_string("decrease 7 inch lcd PWM\r\n");
-//			}
-//			else
+			if(g_lcd_pwm >= 10)
+			{
+				Lcd_pwm_out(g_lcd_pwm - 10);   //屏幕亮度加10
+				debug_printf_string("decrease 7 inch lcd PWM\r\n");
+			}
+			else
 				debug_printf_string("g_lcd_pwm = 0\r\n");
 			break;
 		case '3':
