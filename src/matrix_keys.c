@@ -54,7 +54,7 @@ void matrix_keys_init(void)
 	exti_interrupt_flag_clear(EXTI_12);
 	//2.3 nvic允许中断
 	//中断控制器使能，使用的是外部中断12
-	nvic_irq_enable(EXTI10_15_IRQn,  6, 0);   //允许中断，并设置优先级
+	nvic_irq_enable(EXTI10_15_IRQn,  7, 0);   //允许中断，并设置优先级
 
 	//初始化之后读取一次
 	matrix_keys_row_scan();	
@@ -201,10 +201,11 @@ void EXTI10_15_IRQHandler(void)
 {
 	if(exti_interrupt_flag_get(EXTI_12))
 	{
-		exti_interrupt_flag_clear(EXTI_12);  //清冲断标志
+		
 		exint12_handle();
 		//	exint456_handle();
 	}
+	exti_interrupt_flag_clear(EXTI_12);  //清冲断标志
 }
 
 

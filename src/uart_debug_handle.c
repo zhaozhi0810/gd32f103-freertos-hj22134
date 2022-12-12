@@ -193,16 +193,21 @@ void debug_printf_string_u32(char* str,uint32_t dat,uint8_t base)
 
 static void  Com_Debug_Print_Help(void)
 {
-	debug_printf_string("\r\nDebug cmd:\r\n");
-	debug_printf_string("0. print Program build time\r\n");
-	debug_printf_string("1. 7 inch lcd PWM increace(5inch lcd has no effect)\r\n");
-	debug_printf_string("2. 7 inch lcd PWM decreace(5inch lcd has no effect)\r\n");
-	debug_printf_string("3. print my task_info\r\n");
-	debug_printf_string("4. reset LCD & 9211\r\n");
-	debug_printf_string("5. print Hard Watch Dog Status\r\n");
-	debug_printf_string("6. print Mcu internal_temp\r\n");
-	debug_printf_string("7. reset core board!!\r\n");
-	debug_printf_string("other. print help\r\n");
+	printf("\r\nDebug cmd:\r\n");
+	printf("0. print Program build time\r\n");
+	if(Get_Lcd_Type()){  //返回1表示7寸屏，0表示5寸屏
+		printf("1. 7 inch lcd PWM increace(5inch lcd has no effect)\r\n");
+		printf("2. 7 inch lcd PWM decreace(5inch lcd has no effect)\r\n");
+	}
+	printf("3. freeRtos task stats!!\r\n");
+	printf("4. reset LCD & 9211\r\n");
+	printf("5. print Hard Watch Dog Status\r\n");
+	printf("6. print Mcu internal_temp\r\n");
+	printf("7. reset core board!!\r\n");
+	printf("8. LSPK_Control test\r\n");
+	printf("9. V12_CTL(MORSE) test\r\n");
+	printf("a. keyLEDS pwm test\r\n");
+	printf("other. print help\r\n");
 }
 
 
@@ -218,47 +223,67 @@ static void Com_Debug_Message_Handle1(uint8_t buf)
 			debug_printf_string("ERROR: Command Unknow \r\n");   //不能识别的命令
 			Com_Debug_Print_Help();
 		case '0':
-			debug_printf_string("FreeRTOS ");
+			debug_printf_string("*FreeRTOS* ");
 			debug_printf_string((char*)g_build_time_str);  //打印编译的时间
 			debug_printf_string("\r\n");
 			debug_printf_string("Author:JC&DaZhi <vx:285408136>\r\n"); 
 		break;
+		
 		case '1':
-			if(g_lcd_pwm < 100)
-			{
-				Lcd_pwm_out(g_lcd_pwm + 10);   //屏幕亮度加10
-				debug_printf_string("increase 7 inch lcd PWM\r\n");
+			if(Get_Lcd_Type()){
+				if(g_lcd_pwm < 100)
+				{
+					Lcd_pwm_out(g_lcd_pwm + 10);   //屏幕亮度加10
+					debug_printf_string("increase 7 inch lcd PWM\r\n");
+				}
+				else
+					debug_printf_string("g_lcd_pwm = 100\r\n");
 			}
-			else
-				debug_printf_string("g_lcd_pwm = 100\r\n");
 			break;
 		case '2':
-			if(g_lcd_pwm >= 10)
-			{
-				Lcd_pwm_out(g_lcd_pwm - 10);   //屏幕亮度加10
-				debug_printf_string("decrease 7 inch lcd PWM\r\n");
+			if(Get_Lcd_Type()){
+				if(g_lcd_pwm >= 10)
+				{
+					Lcd_pwm_out(g_lcd_pwm - 10);   //屏幕亮度加10
+					debug_printf_string("decrease 7 inch lcd PWM\r\n");
+				}
+				else
+					debug_printf_string("g_lcd_pwm = 0\r\n");
 			}
-			else
-				debug_printf_string("g_lcd_pwm = 0\r\n");
 			break;
 		case '3':
 			query_task();
 			
 			break;
-		case '4':
+		case '4':  //9211重启
 			debug_printf_string("reset LCD & 9211\r\n");  //lcd加电状态
 			LT9211_Config();
 			break;
-		case '5':
-			debug_printf_string("Watch Dog Status : off\r\n");   //暂时没有开启
+		case '5':  //看门狗状态
+			debug_printf_string("Watch Dog Status : ");
+			if(get_hard_wtd_status())
+				debug_printf_string("on\r\n");   //开启
+			else
+				debug_printf_string("off\r\n");   //关闭
 			break;
-		case '6':
+		case '6':  //mcu内部温度
+			debug_printf_string("Mcu internal_temp = ");
+			debug_printf_u32(get_internal_temp(),10);
+			debug_printf_string("\r\n");
 //			debug_printf_string("Mcu internal_temp = %d\r\n",get_internal_temp());
 			break;
-		case '7':
+		case '7':   
 			debug_printf_string("reset core board!!\r\n");  //lcd加电状态
 			hard_wtd_reset_3399board();
 			break;
+		case '8':  //LSPK 继电器控制 改为PA7
+			LSPK_Control_ToggleOut();
+			break;
+		case '9':   //mores 12 电压输出控制
+			V12_CTL_Control_ToggleOut();
+			break;
+		case 'a':   //键灯亮度调节
+			kLedPWM_ToggleOut();
 	}
 }
 
@@ -323,7 +348,7 @@ static void debug_uart_send_isr(void)
 //调试串口中断处理函数
 void USART0_IRQHandler(void)
 {
-	BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+//	BaseType_t xHigherPriorityTaskWoken = pdFALSE;
     if(usart_interrupt_flag_get(EVAL_COM0, USART_INT_FLAG_RBNE))
     {
 		usart_interrupt_flag_clear(EVAL_COM0, USART_INT_FLAG_RBNE);   //清中断标志

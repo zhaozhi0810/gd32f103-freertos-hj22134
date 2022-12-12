@@ -2,7 +2,7 @@
 
 #include "includes.h"
 //#include "gd32f103r_eval.h"
-#include "stdio.h"
+//#include "stdio.h"
 /*
 	两个串口，串口1（调试），和串口2（发送数据到cpu）
 	

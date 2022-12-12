@@ -68,7 +68,7 @@ int main(void)
 	//1.工作灯的任务
 	xTaskCreate(Task_Led_Show_Work,"TaskLed1",configMINIMAL_STACK_SIZE/2,NULL,2,NULL);
 	//2.调试串口接收任务
-	xTaskCreate(Com_Debug_Recv_Task,"debugr",configMINIMAL_STACK_SIZE+16,NULL,2,NULL);  //调试串口接收任务
+	xTaskCreate(Com_Debug_Recv_Task,"debugr",configMINIMAL_STACK_SIZE*2-16,NULL,2,NULL);  //调试串口接收任务
 
 	//3. 9211只需要初始化，创建任务后自己删除自己,，如果要打印数据的话，栈要设置大一点
 	xTaskCreate(LT9211_Once_Task,"lt9211",configMINIMAL_STACK_SIZE+16,NULL,4,NULL);
@@ -80,6 +80,8 @@ int main(void)
 	//6.获取单片机内部温度的任务
 	xTaskCreate(Inter_Temp_task,"temp",configMINIMAL_STACK_SIZE,NULL,2,NULL);
 
+	//7.led闪烁控制的任务，2022-12-12 改为定时器1控制
+	//xTaskCreate(keyLeds_Flash_task,"led_flash",configMINIMAL_STACK_SIZE,NULL,2,&TaskHandle_leds_Flash);
 	
 	vTaskStartScheduler();
     

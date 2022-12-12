@@ -48,7 +48,11 @@ typedef enum
 	eMCU_RESET_COREBOARD_TYPE,  //复位核心板
 	eMCU_RESET_LCD_TYPE,        //复位lcd 9211（复位引脚没有连通）
 	eMCU_RESET_LFBOARD_TYPE,    //复位底板，好像没有这个功能！！！
-	eMCU_MICCTRL_SETONOFF_TYPE//,  //MICCTRL 引脚的控制
+	eMCU_MICCTRL_SETONOFF_TYPE,  //MICCTRL 引脚的控制,1.3版本改到3399控制了！！！
+	eMCU_LEDS_FLASH_TYPE  ,//led闪烁控制
+	eMCU_LSPK_SETONOFF_TYPE  , //LSPK,2022-11-11 1.3新版增加
+	eMCU_V12_CTL_SETONOFF_TYPE ,  //V12_CTL,2022-11-14 1.3新版增加
+	eMCU_GET_LCDTYPE_TYPE  //,   上位机获得LCD类型的接口，之前是在3399，现在改为单片机实现，2022-12-12
 }mcu_data_type;
 
 

@@ -40,10 +40,43 @@ void lcd_reset_control(void);
 
 
 //PD6  MicCtl 输出控制(参数status 非0输出高，0输出低)
-void MicCtl_Control_OutHigh(uint8_t status);
+void MicCtl_Control_SetOutVal(uint8_t status);
 
 //PD6  MicCtl
 //void MicCtl_Control_Init(void);
+//获得lcd屏幕的类型，2022-09-21之后新做的底板，通过与按键板的三个引脚相连
+//读取引脚的电平，判断lcd的类型，之前是由3399的引脚判断的。
+//返回值0表示5寸屏，非0表示7寸屏
+//2022-09-21 目前还没有新的底板用于判断，默认返回0（表示5寸屏）
+uint8_t Get_Lcd_Type(void);
 
+
+//PA7  LSPK_CRL
+void LSPK_Control_Init(void);
+
+void LSPK_Enable(void);
+void LSPK_Disable(void);
+
+////PA7  LSPK 输出控制(参数status 非0输出高，0输出低)
+void LSPK_Control_SetOutVal(uint8_t status);
+//翻转
+void LSPK_Control_ToggleOut(void);
+
+
+//PC6  V12_CTL
+void V12_CTL_Control_Init(void);
+
+void V12_CTL_Enable(void);
+void V12_CTL_Disable(void);
+
+////PC6  V12_CTL 输出控制(参数status 非0输出高，0输出低)
+void V12_CTL_Control_SetOutVal(uint8_t status);
+//翻转
+void V12_CTL_Control_ToggleOut(void);
+
+
+
+//PC8,9,10,输入引脚
+void LcdType_Control_Init(void);
 #endif
 

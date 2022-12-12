@@ -68,9 +68,9 @@ uint8_t IicApp_Read_Byte_Cur(iic_index_t index,uint8_t dev_addr,uint8_t *dat,uin
 		}
 			
 	}		
-	//.发送stop时序
-	IIC_Stop(index);//产生一个停止条件
+	//.发送stop时序	
 	xTaskResumeAll();//taskEXIT_CRITICAL(); //退出临界区  2022-09-13
+	IIC_Stop(index);//产生一个停止条件
 	return 0;
 }
 
@@ -137,10 +137,9 @@ uint8_t IicApp_Write_Bytes(iic_index_t index,uint8_t dev_addr,uint8_t word_addr,
 			return 4;
 		}
 	}
-	
-	//5.结束，结束总线的占用
-	IIC_Stop(index); //iic_stop(I2Cx);
 	xTaskResumeAll();//taskEXIT_CRITICAL(); //退出临界区  2022-09-13
+	//5.结束，结束总线的占用
+	IIC_Stop(index); //iic_stop(I2Cx);	
 	return 0;
 }
 

@@ -96,17 +96,17 @@ static void LcdCtrl_Control_Init(void)
 
 
 
-static void Lcd7INCtrl_PwmPins_Init(void)
-{
-	//1. 时钟使能
-	rcu_periph_clock_enable(RCU_GPIOB);
-		
-	//2.0 上电控制引脚
-	gpio_init(GPIOB, GPIO_MODE_OUT_PP, GPIO_OSPEED_2MHZ, GPIO_PIN_14|GPIO_PIN_15);  //控制输出	
-	//2. 初始化后，默认输出高
-	gpio_bit_set(GPIOB, GPIO_PIN_14|GPIO_PIN_15);  //LcdCtrl 输出低
+//static void Lcd7INCtrl_PwmPins_Init(void)
+//{
+//	//1. 时钟使能
+//	rcu_periph_clock_enable(RCU_GPIOB);
+//		
+//	//2.0 上电控制引脚
+//	gpio_init(GPIOB, GPIO_MODE_OUT_PP, GPIO_OSPEED_2MHZ, GPIO_PIN_14|GPIO_PIN_15);  //控制输出	
+//	//2. 初始化后，默认输出高
+//	gpio_bit_set(GPIOB, GPIO_PIN_14|GPIO_PIN_15);  //LcdCtrl 输出低
 
-}
+//}
 
 
 
@@ -115,18 +115,27 @@ static void Lcd7INCtrl_PwmPins_Init(void)
 void Gpios_init(void)
 {
 //	Wxen_Control_Init();   //2022-09-15 不初始化反而能正常使用
-	lcd_pwm_init(70);
+	if(Get_Lcd_Type())  //为非0时表示7寸屏
+		lcd_pwm_init(70);
 	
 	MicCtl_Control_Init();   //MIC_CRL 引脚的初始化
 	lcd_reset_control_init();  //lcd 复位引脚的初始化
 	OePins_Control_Init();    //OE引脚的初始化
 
-	LcdCtrl_Control_Init();   //7寸屏电源控制引脚  		
+	
+	if(Get_Lcd_Type())  //为非0时表示7寸屏
+		LcdCtrl_Control_Init();   //7寸屏电源控制引脚  		
+
 //	LcdCtrl_Enable();   //7寸屏lcd电源通电
 //	Enable_LcdLight();    //对7寸屏的控制信号，背光使能和背光pwm控制,	
 
 //	LcdCtrl_Control_Init();	    //
 	//Lcd7INCtrl_PwmPins_Init();	
+	
+	LSPK_Control_Init();      //LSPK 继电器控制  PA7
+	V12_CTL_Control_Init();   //MORSE  12V 输出控制
+	LcdType_Control_Init();   //屏幕类型获取引脚初始化
+	
 }
 
 
@@ -134,7 +143,7 @@ void Gpios_init(void)
 
 
 //PD6  MicCtl 输出控制(参数status 非0输出高，0输出低)
-void MicCtl_Control_OutHigh(uint8_t status)
+void MicCtl_Control_SetOutVal(uint8_t status)
 {
 	debug_printf_string("MicCtl_Control_OutHigh\r\n");
 	if(status)
@@ -204,6 +213,138 @@ void OePins_Output_Low(uint8_t which)
 		gpio_bit_reset(GPIOC, BIT(which-1));  //输出低
 	}
 }
+
+
+//PC6  V12_CTL
+void V12_CTL_Control_Init(void)
+{
+	//1. 时钟使能
+	rcu_periph_clock_enable(RCU_GPIOC);
+		
+	//2. 初始化后，默认输出高
+	gpio_bit_reset(GPIOC, GPIO_PIN_6);	
+	
+	//3 上电控制引脚
+	gpio_init(GPIOC, GPIO_MODE_OUT_PP, GPIO_OSPEED_2MHZ, GPIO_PIN_6);  //控制输出		
+}
+
+
+void V12_CTL_Enable(void)
+{	
+	//1. 初始化后，默认输出低，继电器吸合
+	gpio_bit_set(GPIOC, GPIO_PIN_6);		
+}
+
+void V12_CTL_Disable(void)
+{	
+	//1. 初始化后，默认输出高
+	gpio_bit_reset(GPIOC, GPIO_PIN_6);		
+}
+
+
+////PC6  V12_CTL 输出控制(参数status 非0输出高，0输出低)
+void V12_CTL_Control_SetOutVal(uint8_t status)
+{
+	MY_PRINTF("V12_CTL_Control(MORSE)_OutHigh status = %d\r\n",status);
+	if(status)
+		gpio_bit_set(GPIOC, GPIO_PIN_6);
+	else
+		gpio_bit_reset(GPIOC, GPIO_PIN_6);
+}
+
+//翻转
+void V12_CTL_Control_ToggleOut(void)
+{
+	uint8_t status = gpio_output_bit_get(GPIOC, GPIO_PIN_6);
+	V12_CTL_Control_SetOutVal(!status);
+	
+//	MY_PRINTF("V12_CTL_Control(MORSE) output status = %d\r\n",!status);
+}
+
+
+
+//PC8,9,10,输入引脚
+void LcdType_Control_Init(void)
+{
+	//1. 时钟使能
+	rcu_periph_clock_enable(RCU_GPIOC);		
+	//2.0 输入模式
+	gpio_init(GPIOC, GPIO_MODE_IPU, GPIO_OSPEED_2MHZ, GPIO_PIN_8 | GPIO_PIN_9 | GPIO_PIN_10 );  //控制输出	
+
+}
+
+
+//获取键盘类型
+/*返回值
+1：防爆终端键盘类型
+2：壁挂Ⅲ型终端键盘类型（不关心！！）
+4：嵌入式Ⅰ/Ⅱ/Ⅲ型、防风雨型、壁挂Ⅱ型终端键盘类型
+6：多功能型终端键盘类型(只有这个是7寸屏，其他都是5寸)
+*/
+uint8_t get_LcdType_val(void)
+{
+	return (gpio_input_port_get(GPIOC) >> 8) & 0x7;   //只要PC8，9，10
+}
+
+
+//获得lcd屏幕的类型，2022-09-21之后新做的底板，通过与按键板的三个引脚相连
+//读取引脚的电平，判断lcd的类型，之前是由3399的引脚判断的。
+//返回值0表示5寸屏，非0表示7寸屏
+//2022-09-21 目前还没有新的底板用于判断，默认返回0（表示5寸屏）
+uint8_t Get_Lcd_Type(void)
+{
+	//get_LcdType_val() 返回6 表示是多功能面板，是7寸屏，其他均为5寸，2022-10-10
+	return (get_LcdType_val() == 6);   //2022-09-21 目前还没有新的底板用于判断，默认返回0（表示5寸屏）
+}
+
+
+
+//PA7  LSPK_CRL
+void LSPK_Control_Init(void)
+{
+	//1. 时钟使能
+	rcu_periph_clock_enable(RCU_GPIOA);
+		
+	//2. 初始化后，默认输出高
+	gpio_bit_set(GPIOA, GPIO_PIN_7);	
+	
+	//3 上电控制引脚
+	gpio_init(GPIOA, GPIO_MODE_OUT_PP, GPIO_OSPEED_2MHZ, GPIO_PIN_7);  //控制输出		
+}
+
+
+void LSPK_Enable(void)
+{	
+	//1. 初始化后，默认输出低，继电器吸合
+	gpio_bit_set(GPIOA, GPIO_PIN_7);		
+}
+
+void LSPK_Disable(void)
+{	
+	//1. 初始化后，默认输出高
+	gpio_bit_reset(GPIOA, GPIO_PIN_7);		
+}
+
+
+////PA7  LSPK 输出控制(参数status 非0输出高，0输出低)
+void LSPK_Control_SetOutVal(uint8_t status)
+{
+	MY_PRINTF("LSPK_Control_OutHigh status = %d\r\n",status);
+	if(status)
+		gpio_bit_set(GPIOA, GPIO_PIN_7);
+	else
+		gpio_bit_reset(GPIOA, GPIO_PIN_7);
+}
+
+//翻转
+void LSPK_Control_ToggleOut(void)
+{
+	uint8_t status = gpio_output_bit_get(GPIOA, GPIO_PIN_7);
+	LSPK_Control_SetOutVal(!status);
+	
+//	MY_PRINTF("LSPK_Control output status = %d\r\n",!status);
+}
+
 
 
 

@@ -202,7 +202,7 @@ void AnswerCpu_data(uint8_t *cmd)
 		//	Lcd_pwm_change(10);
 			break;
 		case eMCU_LEDSETPWM_TYPE:   //设置led的pwm 亮度值
-			set_Led_Pwm(cmd[1]);
+		//	set_Led_Pwm(cmd[1]);
 			break;
 		case eMCU_GET_TEMP_TYPE:    //获得单片机的温度
 			buf[2] = get_internal_temp()/100;   //只要整数部分。
@@ -234,8 +234,20 @@ void AnswerCpu_data(uint8_t *cmd)
 		case eMCU_RESET_LFBOARD_TYPE:  //复位底板，好像没有这个功能！！！
 			//nothing to do  20220812
 			break;
-		case eMCU_MICCTRL_SETONOFF_TYPE:  //设置mic_ctrl引脚的高低电平
-			MicCtl_Control_OutHigh(cmd[1]); //高低电平 非0为高，0为低
+		case eMCU_MICCTRL_SETONOFF_TYPE:  //设置mic_ctrl引脚的高低电平,已取消，改为3399控制，2022-12-12
+		//	MicCtl_Control_OutHigh(cmd[1]); //高低电平 非0为高，0为低
+			break;
+		case eMCU_LEDS_FLASH_TYPE:   //led闪烁控制,
+			light_leds_add_flash(cmd[1]);
+			break;	
+		case eMCU_LSPK_SETONOFF_TYPE:  //设置mic_ctrl引脚的高低电平			
+			MicCtl_Control_SetOutVal(cmd[1]); //高低电平 非0为高，0为低
+			break;
+		case eMCU_GET_LCDTYPE_TYPE:
+			buf[2] = Get_Lcd_Type();  //返回值0表示5寸屏，非0表示7寸屏,2022-12-12
+			break;
+		case eMCU_V12_CTL_SETONOFF_TYPE:
+			V12_CTL_Control_SetOutVal(cmd[1]); //高低电平 非0为高，0为低
 			break;
 		default:
 			buf[2] = 255;   //表示失败

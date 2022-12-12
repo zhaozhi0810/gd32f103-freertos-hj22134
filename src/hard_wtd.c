@@ -100,13 +100,17 @@ uint8_t  hard_wtd_get_timeout(void)
 	return hwtd_timeout;
 }
 
-
+static uint8_t is_uartcmd_reboot_cpu = 0;  //等于0表示不重启，大于0表示重启，2022-10-17
 //3399重启控制
 void hard_wtd_reset_3399board(void)
 {	
-	gpio_bit_reset(GPIOA, GPIO_PIN_6);
-	vTaskDelay(200);
-	gpio_bit_set(GPIOA, GPIO_PIN_6);
+	gpio_bit_reset(GPIOC, GPIO_PIN_2);  //OE3 输出低	
+	hard_wtd_disable();   //主板重启后，看门狗关闭
+	
+	is_uartcmd_reboot_cpu = 3;  //10-17，cpu 重启	
+//	gpio_bit_reset(GPIOA, GPIO_PIN_6);
+//	vTaskDelay(200);
+//	gpio_bit_set(GPIOA, GPIO_PIN_6);
 }
 
 
@@ -161,7 +165,23 @@ void exint4_handle(void)
 
 #endif
 
-
+//800ms 看门狗
+static void iwdog_init(uint8_t delaytimes)
+{	
+	fwdgt_write_enable();
+	
+	if(delaytimes == 0)
+	{
+		fwdgt_config(0xfff,FWDGT_PSC_DIV8);    //设置分配系数,最长800ms		
+	}
+	else //暂时没有用到。2022-10-18
+	{
+		fwdgt_config(0xfff,FWDGT_PSC_DIV64);    //设置分配系数,最长6s	
+	}
+	fwdgt_enable(); //使能看门狗
+	
+	while(1);  //程序卡死，等待复位
+}
 
 
 //只是单片机模拟一个看门狗
@@ -183,6 +203,38 @@ static void hard_wtd_feed_task(void* arg)
 				}
 			}
 		}
+		
+		if(is_uartcmd_reboot_cpu)
+		{
+			//printf("--is_uartcmd_reboot_cpu = %d\r\n",is_uartcmd_reboot_cpu);
+			if(is_uartcmd_reboot_cpu == 3)
+			{
+			//	printf("is_uartcmd_reboot_cpu = 3\r\n");
+				gpio_bit_reset(GPIOA, GPIO_PIN_6);
+				is_uartcmd_reboot_cpu = 2;
+			//	is_hwtd_enable = 0;   //不需要使用看门狗了
+			//	hwtd_timeout_count = 220;  //看门狗的时间重新设置为22秒
+				return;
+			}
+			else if(is_uartcmd_reboot_cpu == 2)
+			{
+				gpio_bit_set(GPIOA, GPIO_PIN_6);
+			//	printf("is_uartcmd_reboot_cpu = 2\r\n");
+				is_uartcmd_reboot_cpu = 1;
+				return;
+			}
+			else if(is_uartcmd_reboot_cpu == 1)
+			{			
+			//	g_task_id |= 1<<4 ; //10-17-->9211 重启
+			//	LT9211_Config();   //10-17，cpu 重启，9211 重启
+				is_uartcmd_reboot_cpu = 0;
+				iwdog_init(0);   //单片机复位
+				return;
+			}
+			else if(is_uartcmd_reboot_cpu)
+				is_uartcmd_reboot_cpu--;   //其他情况则倒计时
+		}
+		
 		vTaskDelay(100);
 	}
 

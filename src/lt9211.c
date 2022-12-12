@@ -8,12 +8,12 @@
 ************************************************************/
 #include	"includes.h"
 
-static uint16_t hact, vact;
-static uint16_t hs, vs;
-static uint16_t hbp, vbp;
-static uint16_t htotal, vtotal;
-static uint16_t hfp, vfp;
-static uint8_t VideoFormat = 0 ;
+//static uint16_t hact, vact;
+//static uint16_t hs, vs;
+//static uint16_t hbp, vbp;
+//static uint16_t htotal, vtotal;
+//static uint16_t hfp, vfp;
+//static uint8_t VideoFormat = 0 ;
 
 //uint8_t cmd_init_9211 = 0;  //1 复位9211
 
@@ -21,7 +21,7 @@ static uint8_t VideoFormat = 0 ;
 //enum VideoFormat Video_Format;
 #define MIPI_LANE_CNT  MIPI_4_LANE // 0: 4lane
 #define MIPI_SETTLE_VALUE 0x05//（0A or 05） 
-#define PCR_M_VALUE 0x17 
+//#define PCR_M_VALUE 0x17 
 
 //Video_pattern
 #define VIDEO_PATTERN 0          
@@ -242,19 +242,19 @@ void LT9211_SetVideoTiming(struct video_timing *video_format)
 
 void LT9211_TimingSet(void)
 {
-  uint16_t hact ;	
-	uint16_t vact ;	
-	uint8_t fmt ;		
-	uint8_t pa_lpn = 0;
-	
-	//Timer0_vTaskDelay(500);//500-->100
-	vTaskDelay(500);
-	HDMI_WriteI2C_Byte(0xff,0xd0);
-	hact = (HDMI_ReadI2C_Byte(0x82)<<8) + HDMI_ReadI2C_Byte(0x83) ;
-	hact = hact/3;
-	fmt = (HDMI_ReadI2C_Byte(0x84) &0x0f);
-	vact = (HDMI_ReadI2C_Byte(0x85)<<8) +HDMI_ReadI2C_Byte(0x86);
-	pa_lpn = HDMI_ReadI2C_Byte(0x9c);
+//  uint16_t hact ;	
+//	uint16_t vact ;	
+//	uint8_t fmt ;		
+//	uint8_t pa_lpn = 0;
+//	
+//	//Timer0_vTaskDelay(500);//500-->100
+//	vTaskDelay(500);
+//	HDMI_WriteI2C_Byte(0xff,0xd0);
+//	hact = (HDMI_ReadI2C_Byte(0x82)<<8) + HDMI_ReadI2C_Byte(0x83) ;
+//	hact = hact/3;
+//	fmt = (HDMI_ReadI2C_Byte(0x84) &0x0f);
+//	vact = (HDMI_ReadI2C_Byte(0x85)<<8) +HDMI_ReadI2C_Byte(0x86);
+//	pa_lpn = HDMI_ReadI2C_Byte(0x9c);
 //	printf("\r\nhact = %u\n\r",hact);
 //	printdec_u32(hact);
 //	printf("\r\nvact = %u\n\r",vact);
@@ -264,30 +264,16 @@ void LT9211_TimingSet(void)
 
 	//Timer0_vTaskDelay(100);
 	vTaskDelay(100);
-//	if (1)//(hact == video_1920x1080_60Hz.hact ) &&( vact == video_1920x1080_60Hz.vact ))
-//	{
-//		 VideoFormat = video_1920x1080_60Hz_vic;
-//		 LT9211_SetVideoTiming(&video_1920x1080_60Hz);
-//		printf("1920x1080_60Hz\r\n");
-//	}
-//	else 
-//	if (1)//(hact == video_1280x720_60Hz.hact ) &&( vact == video_1280x720_60Hz.vact ))
-//	{
-//		VideoFormat = video_1280x720_60Hz_vic;
-//		LT9211_SetVideoTiming(&video_1280x720_60Hz);
-//		printf("1280x720_60Hz\r\n");
-//		
-//		
-//	}
+
 	if (1)//(hact == video_1280x720_60Hz.hact ) &&( vact == video_1280x720_60Hz.vact ))
 	{
-		VideoFormat = video_1024x600_60Hz_vic;
+	//	VideoFormat = video_1024x600_60Hz_vic;
 		LT9211_SetVideoTiming(&video_1024x600_60Hz);
 		debug_printf_string("1024x600_60Hz\r\n");		
 	}	
 	else 
 	{
-	   VideoFormat = video_none;
+//	   VideoFormat = video_none;
 	    debug_printf_string("video_none\r\n");		 
 	}
 }
@@ -298,7 +284,7 @@ void LT9211_MipiRxPll(void)
   	/* dessc pll */
 	HDMI_WriteI2C_Byte(0xff,0x82);
 	HDMI_WriteI2C_Byte(0x2d,0x48);
-    HDMI_WriteI2C_Byte(0x35,PIXCLK_44M_88M); /*0x82*/  // PIXCLK_44M_88M		
+    HDMI_WriteI2C_Byte(0x35,PIXCLK_44M_88M); /*0x82*/  // PIXCLK_44M_88M	这个位置注意修改，之前没有修改的时候是有问题的！！	
 }
 
 
@@ -354,7 +340,7 @@ void LT9211_MipiPcr(void)
 	
 
 	// 	Timer0_vTaskDelay(800);//800->120
-	vTaskDelay(800);
+	vTaskDelay(100);   //800->100
 	
 	{
 		for(loopx = 0; loopx < 10; loopx++) //Check pcr_stable 10
@@ -479,11 +465,16 @@ void LT9211_TxPhy(void)
 
 void LT9211_TxDigital(void)
 { 
+	uint8_t val = 0x40;
+	
+	if(Get_Lcd_Type())  //返回非0时表示是7寸屏
+		val = 0x50;
+	
 	if( (LT9211_OutPutModde == OUTPUT_LVDS_2_PORT) || (LT9211_OutPutModde == OUTPUT_LVDS_1_PORT) ) 
 	{
 		debug_printf_string("\rLT9211 set to OUTPUT_LVDS");
 		HDMI_WriteI2C_Byte(0xff,0x85); /* lvds tx controller */
-		HDMI_WriteI2C_Byte(0x59,0x50); 	//bit4-LVDSTX Display color depth set 1-8bit(0x50), 0-6bit(0x40); 
+		HDMI_WriteI2C_Byte(0x59,val); 	//bit4-LVDSTX Display color depth set 1-8bit(0x50), 0-6bit(0x40); 
 		HDMI_WriteI2C_Byte(0x5a,0xaa); 
 		HDMI_WriteI2C_Byte(0x5b,0xaa);
 		if( LT9211_OutPutModde == OUTPUT_LVDS_2_PORT )
@@ -548,7 +539,7 @@ void LT9211_ClockCheckDebug(void)
 
 void LT9211_VideoCheckDebug(void)
 {
-
+#if 0
 	uint8_t sync_polarity;
 
 	HDMI_WriteI2C_Byte(0xff,0x86);
@@ -603,7 +594,7 @@ void LT9211_VideoCheckDebug(void)
 	debug_printf_string_u32("vact = ",vact,10);
 //	printdec_u32(vtotal);
 	debug_printf_string_u32("vtotal = ",vtotal,10);
-
+#endif
 }
 
 void LT9211_Pattern(struct video_timing *video_format)
@@ -749,21 +740,21 @@ static void LT9211_Init(void)
 	vTaskDelay(10);
 	LT9211_MipiRxPhy();
 	LT9211_MipiRxDigital(); 
-	LT9211_TimingSet();
+	LT9211_TimingSet();   //可以精简
 	LT9211_MipiRxPll();
 	vTaskDelay(10);
-	LT9211_MipiPcr();
+	LT9211_MipiPcr();      //可以精简
 	//Timer0_vTaskDelay(10);
-	vTaskDelay(10);
-	LT9211_Txpll();
+	vTaskDelay(10);   
+	LT9211_Txpll();      //可以精简
 	LT9211_TxPhy();	
 	LT9211_TxDigital();
 	vTaskDelay(10);
 	lt9211_lvds_tx_logic_rst();    //LVDS TX LOGIC RESET 
 	lt9211_lvds_tx_en();           //LVDS TX output enable 
 	vTaskDelay(10);
-	LT9211_ClockCheckDebug();
-	LT9211_VideoCheckDebug();
+//	LT9211_ClockCheckDebug();
+//	LT9211_VideoCheckDebug();
 
 }
 
@@ -802,13 +793,10 @@ void LT9211_Once_Task(void* arg)
 	vTaskDelay(10);
 	LT9211_Config();
 	
-	
-	Enable_LcdLight();
-	//while(1)
-	{
-		vTaskDelay(1000);
-	}
-	
+	if(Get_Lcd_Type())  //返回非0时表示是7寸屏
+		Enable_LcdLight();
+
+	vTaskDelay(100);
 	
 	vTaskDelete(NULL);  //删除自己
 }

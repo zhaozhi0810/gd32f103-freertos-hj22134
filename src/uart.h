@@ -50,8 +50,8 @@ typedef struct{
 
 
 
-#define  DEBUG_PRINTF    //用于输出一些出错信息
-//#define  MY_DEBUG        //用于输出一些调试信息，正常使用时不需要
+//#define  DEBUG_PRINTF    //用于输出一些出错信息
+#define  MY_DEBUG        //用于输出一些调试信息，正常使用时不需要
 
 #ifdef DEBUG_PRINTF
   #define DBG_PRINTF(fmt, args...)  \
