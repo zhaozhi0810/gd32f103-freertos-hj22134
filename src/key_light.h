@@ -40,7 +40,7 @@ uint8_t get_led_status(uint8_t whichled);
 设置lcd亮度占空比
 //degree 修改为0-100
 */
-void set_Kleds_pwm_out(uint8_t degree);
+void set_Kleds_pwm_out(int8_t degree);
 
 
 //pwm增大减小，方便串口调试控制

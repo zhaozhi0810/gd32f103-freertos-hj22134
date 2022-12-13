@@ -152,18 +152,18 @@
         <Bp>
           <Number>0</Number>
           <Type>0</Type>
-          <LineNumber>167</LineNumber>
+          <LineNumber>180</LineNumber>
           <EnabledFlag>1</EnabledFlag>
-          <Address>134231898</Address>
+          <Address>134219824</Address>
           <ByteObject>0</ByteObject>
           <HtxType>0</HtxType>
           <ManyObjects>0</ManyObjects>
           <SizeOfObject>0</SizeOfObject>
           <BreakByAccess>0</BreakByAccess>
           <BreakIfRCount>1</BreakIfRCount>
-          <Filename>.\src\key_light.c</Filename>
+          <Filename>.\src\uart_conect_cpu_handler.c</Filename>
           <ExecCommand></ExecCommand>
-          <Expression>\\hj22134_gd32f103_freertos\src/key_light.c\167</Expression>
+          <Expression>\\hj22134_gd32f103_freertos\src/uart_conect_cpu_handler.c\180</Expression>
         </Bp>
       </Breakpoint>
       <MemoryWindow1>
@@ -431,7 +431,7 @@
       <GroupNumber>1</GroupNumber>
       <FileNumber>17</FileNumber>
       <FileType>1</FileType>
-      <tvExp>0</tvExp>
+      <tvExp>1</tvExp>
       <tvExpOptDlg>0</tvExpOptDlg>
       <bDave2>0</bDave2>
       <PathWithFileName>.\src\key_light.c</PathWithFileName>

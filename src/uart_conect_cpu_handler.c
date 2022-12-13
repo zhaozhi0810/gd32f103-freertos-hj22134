@@ -186,10 +186,10 @@ void AnswerCpu_data(uint8_t *cmd)
 			key_light_leds_control(cmd[1],0);
 		break;
 		case eMCU_LCD_SETONOFF_TYPE:  //设置lcd 打开或者关闭,7寸屏控制
-//			if(cmd[1])
-//				Enable_LcdLight();   //打开屏幕
-//			else
-//				Disable_LcdLight();
+			if(cmd[1])
+				Enable_LcdLight();   //打开屏幕
+			else
+				Disable_LcdLight();
 			break;
 		case eMCU_LEDSETALL_TYPE:  //设置所有的led 打开或者关闭
 			if(cmd[1])
@@ -201,7 +201,8 @@ void AnswerCpu_data(uint8_t *cmd)
 			buf[2] = get_led_status(cmd[1]); //获得的值保存在buf[2]中发回去		
 		//	Lcd_pwm_change(10);
 			break;
-		case eMCU_LEDSETPWM_TYPE:   //设置led的pwm 亮度值
+		case eMCU_LEDSETPWM_TYPE:   //设置键灯led的pwm 亮度值
+			set_Kleds_pwm_out(cmd[1]);
 		//	set_Led_Pwm(cmd[1]);
 			break;
 		case eMCU_GET_TEMP_TYPE:    //获得单片机的温度
@@ -235,19 +236,23 @@ void AnswerCpu_data(uint8_t *cmd)
 			//nothing to do  20220812
 			break;
 		case eMCU_MICCTRL_SETONOFF_TYPE:  //设置mic_ctrl引脚的高低电平,已取消，改为3399控制，2022-12-12
+			//nothing to do  20221213
 		//	MicCtl_Control_OutHigh(cmd[1]); //高低电平 非0为高，0为低
 			break;
 		case eMCU_LEDS_FLASH_TYPE:   //led闪烁控制,
 			light_leds_add_flash(cmd[1]);
 			break;	
 		case eMCU_LSPK_SETONOFF_TYPE:  //设置mic_ctrl引脚的高低电平			
-			MicCtl_Control_SetOutVal(cmd[1]); //高低电平 非0为高，0为低
+			LSPK_Control_SetOutVal(cmd[1]);
 			break;
 		case eMCU_GET_LCDTYPE_TYPE:
-			buf[2] = Get_Lcd_Type();  //返回值0表示5寸屏，非0表示7寸屏,2022-12-12
+			buf[2] = get_LcdType_val();  //返回值0表示5寸屏，非0表示7寸屏,2022-12-12
 			break;
 		case eMCU_V12_CTL_SETONOFF_TYPE:
 			V12_CTL_Control_SetOutVal(cmd[1]); //高低电平 非0为高，0为低
+			break;
+		case eMCU_5INLCD_SETONOFF_TYPE:  //5inch lcd 背光控制
+			SHTDB_5IN_Control_SetOutVal(cmd[1]); //非0输出高电平点亮5inch，0输出低熄灭 5inch lcd
 			break;
 		default:
 			buf[2] = 255;   //表示失败

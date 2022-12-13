@@ -207,6 +207,13 @@ static void  Com_Debug_Print_Help(void)
 	printf("8. LSPK_Control test\r\n");
 	printf("9. V12_CTL(MORSE) test\r\n");
 	printf("a. keyLEDS pwm test\r\n");
+	printf("b. 5inch lcd blacklight control\r\n");
+	printf("c. SPKEN control\r\n");
+	printf("d. EAR_L_EN control\r\n");
+	printf("e. EAR_R_EN control\r\n");
+	printf("f. key_leds pwm increace(10%%)\r\n");
+	printf("g. key_leds all on\r\n");
+	printf("h. key_leds all off\r\n");
 	printf("other. print help\r\n");
 }
 
@@ -284,6 +291,28 @@ static void Com_Debug_Message_Handle1(uint8_t buf)
 			break;
 		case 'a':   //键灯亮度调节
 			kLedPWM_ToggleOut();
+			break;
+		case 'b':   //5寸lcd背光控制
+			SHTDB_5IN_Control_ToggleOut();
+			break;
+		case 'c':   //SPEN控制
+			SPKEN_Control_ToggleOut();
+			break;
+		case 'd':   //EAR_L_EN控制
+			EAR_L_EN_Control_ToggleOut();
+			break;
+		case 'e':   //EAR_R_EN控制
+			EAR_R_EN_Control_ToggleOut();
+			break;
+		case 'f':   //键灯亮度控制
+			kLedPWM_ToggleOut();
+			break;
+		case 'g':   //键灯全部点亮控制
+			key_light_allleds_control(1);
+			break;
+		case 'h':   //键灯全部熄灭控制
+			key_light_allleds_control(0);
+			break;
 	}
 }
 

@@ -88,7 +88,7 @@ void key_light_leds_init(void)
 	//2. 初始化后，默认输出高
 	gpio_bit_set(GPIOE, GPIO_PIN_8 | GPIO_PIN_9);   //PE9 是pwm引脚，需要设置为高！！！2022-09-16	
 	
-	Kleds_pwm_init(100);
+	Kleds_pwm_init(100);   //键灯pwm值为100
 	
 	//用于led键灯闪烁控制，2022-12-12
 	TIM1_Led_Pwm_Init(1000-1,(SystemCoreClock/10000)-1);    //100ms定时初始化
@@ -369,7 +369,7 @@ void Kleds_pwm_init(uint8_t degree)
 设置lcd亮度占空比
 //degree 修改为0-100
 */
-void set_Kleds_pwm_out(uint8_t degree)
+void set_Kleds_pwm_out(int8_t degree)
 {
 #ifdef KLEDS_PWM
 	uint32_t value;
@@ -379,8 +379,8 @@ void set_Kleds_pwm_out(uint8_t degree)
 	
 	if(degree > 100)	
 		degree = 100;	
-//	else if(degree < 0)
-//		degree = 0;
+	else if(degree < 0)
+		degree = 0;
 		
 	g_kleds_pwm = degree; 
 	MY_PRINTF("Kleds_pwm_out g_kleds_pwm = %d\r\n",g_kleds_pwm);   //打印一般信息，可以关闭

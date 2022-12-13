@@ -4,18 +4,12 @@
 	2021-09-26
 	第十一个移植的文件。
 	
-	需要使用定时器0CH2N。  GPB15   （GD32定时器从0开始编号，stm32从1开始编号）
+	7寸LCDPWM，需要使用定时器0CH2N。  GPB15   （GD32定时器从0开始编号，stm32从1开始编号）
 
 	主要是
-	1.pwm控制LCD亮度  PB14
+	1.pwm控制LCD亮度  PB15
 	2.背光电源使能引脚 PB14
-
-
 	//似乎只能控制7寸屏，2022-07-28  对5寸屏无效
-
-
-2022-09-14
-暂无该功能！！！！
 
 */
 
@@ -24,12 +18,12 @@
 	
 static uint16_t PWM_DEGREE_MAX = 100;   //PWM频率  1us计个数，4000计算的频率就是1000000/4000=250Hz 太高了影响电磁兼容实验？？？
 uint8_t g_lcd_pwm = 100;
-
+static int8_t gs_LcdType = -1;   //0 表示5inch，1表示7inch，-1屏类型未知，2022-12-13
 //PB14 timer11 ch0,timer0 ch1_ON
 //PB15 timer11 ch1,timer0 ch2_ON
 
 #define LCD_PWM_POWER_VOL_PORT GPIO_PIN_14
-#define LCD_PWM_PIN GPIO_PIN_15
+#define LCD_PWM_PIN GPIO_PIN_15      //LCD_PWM1  7寸引脚
 #define LCD_PWM_PORT GPIOB
 #define LCD_PWM_PORT_RCU RCU_GPIOB
 #define LCD_PWM_TIMER_RCU  RCU_TIMER0    //20220714 更正为timer0，示波器已经看到波形，串口调节正常
@@ -173,39 +167,66 @@ uint8_t Get_Lcd_Power_Status(void)
 //开启背光（包括电源，ttl转换，背光，定时器全部开启）
 void Enable_LcdLight(void)
 {	
-//	Enable_Lcd_PdN();     //lvds 转换功能开启	
-	Enable_Lcd_Power();   //lcd电源开启
-	vTaskDelay(100);
-#ifndef LCD_PWM
-	gpio_bit_set(LCD_PWM_PORT, LCD_PWM_PIN);  //拉高PWM引脚
-#else	
-	Lcd_pwm_out(g_lcd_pwm==0?70:g_lcd_pwm);   //设置占空比70
-	vTaskDelay(100);
-	timer_enable(LCD_PWM_TIMER);   //开启定时器
-#endif		
-	vTaskDelay(100);
-	//gpio_bit_set(GPIOB, GPIO_PIN_14);   //开启背光使能
-	Enable_Lcd_Power();
-	debug_printf_string("Enable_LcdLight\r\n");
+	if(gs_LcdType < 0)
+	{
+		gs_LcdType = Get_Lcd_Type(); //获得屏幕类型1 是7寸，0是5寸
+	}
+	
+	if(gs_LcdType == 0)  //5寸的控制
+	{
+		SHTDB_5IN_Control_SetOutVal(1);  //背光打开
+		debug_printf_string("Enable_LcdLight 5inch\r\n");
+	}	
+	else  //7寸的控制
+	{
+	//	Enable_Lcd_PdN();     //lvds 转换功能开启	
+		Enable_Lcd_Power();   //lcd电源开启
+		vTaskDelay(100);
+	#ifndef LCD_PWM
+		gpio_bit_set(LCD_PWM_PORT, LCD_PWM_PIN);  //拉高PWM引脚
+	#else	
+		Lcd_pwm_out(g_lcd_pwm==0?70:g_lcd_pwm);   //设置占空比70
+		vTaskDelay(100);
+		timer_enable(LCD_PWM_TIMER);   //开启定时器
+	#endif		
+		vTaskDelay(100);
+		//gpio_bit_set(GPIOB, GPIO_PIN_14);   //开启背光使能
+		Enable_Lcd_Power();
+		debug_printf_string("Enable_LcdLight\r\n");
+	}
 }
 
 
 //关闭背光（包括电源，ttl转换，背光，定时器全部关闭）
 void Disable_LcdLight(void)
 {
-//	gpio_bit_reset(GPIOB, GPIO_PIN_14);  //关闭背光使能
-#ifndef LCD_PWM
-	gpio_bit_reset(LCD_PWM_PORT, LCD_PWM_PIN);
-#else
-	timer_channel_output_pulse_value_config(LCD_PWM_TIMER, LCD_PWM_TIMER_CH, PWM_DEGREE_MAX);   //关闭背光pwm
-	vTaskDelay(100);
-	timer_disable(LCD_PWM_TIMER);  //关闭定时器
-#endif	
+	if(gs_LcdType < 0)
+	{
+		gs_LcdType = Get_Lcd_Type(); //获得屏幕类型1 是7寸，0是5寸
+	}
 	
-//	Disable_Lcd_PdN();     //lvds 转换功能关闭
-	Disable_Lcd_Power();   //lcd电源关闭
+	if(gs_LcdType == 0)  //5寸的控制
+	{
+		SHTDB_5IN_Control_SetOutVal(0);  //背光关闭
+		debug_printf_string("Disable_LcdLight 5inch\r\n");
+	}	
+	else  //7寸的控制
+	{	
 		
-	debug_printf_string("Disable_LcdLight\r\n");
+	//	gpio_bit_reset(GPIOB, GPIO_PIN_14);  //关闭背光使能
+	#ifndef LCD_PWM
+		gpio_bit_reset(LCD_PWM_PORT, LCD_PWM_PIN);
+	#else
+		timer_channel_output_pulse_value_config(LCD_PWM_TIMER, LCD_PWM_TIMER_CH, PWM_DEGREE_MAX);   //关闭背光pwm
+		vTaskDelay(100);
+		timer_disable(LCD_PWM_TIMER);  //关闭定时器
+	#endif	
+		
+	//	Disable_Lcd_PdN();     //lvds 转换功能关闭
+		Disable_Lcd_Power();   //lcd电源关闭
+			
+		debug_printf_string("Disable_LcdLight\r\n");
+	}
 }
 
 

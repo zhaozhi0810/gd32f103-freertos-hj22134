@@ -49,7 +49,14 @@ void MicCtl_Control_SetOutVal(uint8_t status);
 //返回值0表示5寸屏，非0表示7寸屏
 //2022-09-21 目前还没有新的底板用于判断，默认返回0（表示5寸屏）
 uint8_t Get_Lcd_Type(void);
-
+//获取键盘类型
+/*返回值
+1：防爆终端键盘类型
+2：壁挂Ⅲ型终端键盘类型（不关心！！）
+4：嵌入式Ⅰ/Ⅱ/Ⅲ型、防风雨型、壁挂Ⅱ型终端键盘类型
+6：多功能型终端键盘类型(只有这个是7寸屏，其他都是5寸)
+*/
+uint8_t get_LcdType_val(void);
 
 //PA7  LSPK_CRL
 void LSPK_Control_Init(void);
@@ -78,5 +85,38 @@ void V12_CTL_Control_ToggleOut(void);
 
 //PC8,9,10,输入引脚
 void LcdType_Control_Init(void);
+
+
+//PC5  5寸背光使能？
+//2022-12-13 增加
+void SHTDB_5IN_Control_Init(void);
+////PC5  SHTDB_5IN 输出控制(参数status 非0输出高电平点亮5inch，0输出低熄灭 5inch lcd)
+void SHTDB_5IN_Control_SetOutVal(uint8_t status);
+//翻转
+void SHTDB_5IN_Control_ToggleOut(void);
+
+
+//PC11  扬声器使能
+//2022-12-13 增加
+void SPKEN_Control_Init(void);
+////PC11  扬声器使能
+void SPKEN_Control_SetOutVal(uint8_t status);
+//翻转
+void SPKEN_Control_ToggleOut(void);
+
+//2022-12-13 增加
+void EAR_L_EN_Control_Init(void);
+////PC12  扬声器使能
+void EAR_L_EN_Control_SetOutVal(uint8_t status);
+//翻转
+void EAR_L_EN_Control_ToggleOut(void);
+
+//2022-12-13 增加
+void EAR_R_EN_Control_Init(void);
+////PC13  扬声器使能
+void EAR_R_EN_Control_SetOutVal(uint8_t status);
+//翻转
+void EAR_R_EN_Control_ToggleOut(void);
+
 #endif
 

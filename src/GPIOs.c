@@ -136,6 +136,13 @@ void Gpios_init(void)
 	V12_CTL_Control_Init();   //MORSE  12V 输出控制
 	LcdType_Control_Init();   //屏幕类型获取引脚初始化
 	
+	SHTDB_5IN_Control_Init();  //5寸屏的背光使能,2022-12-13
+	
+	//音频控制，低电平有效，高电平禁止，2022-12-13，可以不使用
+	SPKEN_Control_Init();
+	EAR_L_EN_Control_Init();
+	EAR_R_EN_Control_Init();
+	
 }
 
 
@@ -145,7 +152,8 @@ void Gpios_init(void)
 //PD6  MicCtl 输出控制(参数status 非0输出高，0输出低)
 void MicCtl_Control_SetOutVal(uint8_t status)
 {
-	debug_printf_string("MicCtl_Control_OutHigh\r\n");
+	//debug_printf_string("MicCtl_Control_OutHigh\r\n");
+	MY_PRINTF("MicCtl_Control_SetOutVal status = %d\r\n",status);
 	if(status)
 		gpio_bit_set(GPIOD, GPIO_PIN_6);
 	else
@@ -213,6 +221,54 @@ void OePins_Output_Low(uint8_t which)
 		gpio_bit_reset(GPIOC, BIT(which-1));  //输出低
 	}
 }
+
+//PC5  5寸背光使能？
+//2022-12-13 增加
+void SHTDB_5IN_Control_Init(void)
+{
+	//1. 时钟使能
+	rcu_periph_clock_enable(RCU_GPIOC);
+		
+	//2. 初始化后，默认输出高
+	gpio_bit_set(GPIOC, GPIO_PIN_5);	
+	
+	//3 上电控制引脚
+	gpio_init(GPIOC, GPIO_MODE_OUT_PP, GPIO_OSPEED_2MHZ, GPIO_PIN_5);  //控制输出	
+}
+
+//高电平点亮 5inch lcd
+void SHTDB_5IN_Enable(void)
+{	
+	gpio_bit_set(GPIOC, GPIO_PIN_5);		
+}
+
+//低电平熄灭 5inch lcd
+void SHTDB_5IN_Disable(void)
+{	
+	gpio_bit_reset(GPIOC, GPIO_PIN_5);		
+}
+
+
+////PC5  SHTDB_5IN 输出控制(参数status 非0输出高电平点亮5inch，0输出低熄灭 5inch lcd)
+void SHTDB_5IN_Control_SetOutVal(uint8_t status)
+{
+	MY_PRINTF("SHTDB_5IN_Control_SetOutVal status = %d\r\n",status);
+	if(status)
+		SHTDB_5IN_Enable();
+	else
+		SHTDB_5IN_Disable();
+}
+
+//翻转
+void SHTDB_5IN_Control_ToggleOut(void)
+{
+	uint8_t status = gpio_output_bit_get(GPIOC, GPIO_PIN_5);
+	SHTDB_5IN_Control_SetOutVal(!status);
+	
+//	MY_PRINTF("V12_CTL_Control(MORSE) output status = %d\r\n",!status);
+}
+
+
 
 
 //PC6  V12_CTL
@@ -283,7 +339,9 @@ void LcdType_Control_Init(void)
 */
 uint8_t get_LcdType_val(void)
 {
-	return (gpio_input_port_get(GPIOC) >> 8) & 0x7;   //只要PC8，9，10
+	uint8_t val = (gpio_input_port_get(GPIOC) >> 8) & 0x7;  //只要PC8，9，10
+//	MY_PRINTF("get_LcdType_val status = %d\r\n",val);
+	return val;   //只要PC8，9，10
 }
 
 
@@ -329,7 +387,7 @@ void LSPK_Disable(void)
 ////PA7  LSPK 输出控制(参数status 非0输出高，0输出低)
 void LSPK_Control_SetOutVal(uint8_t status)
 {
-	MY_PRINTF("LSPK_Control_OutHigh status = %d\r\n",status);
+	MY_PRINTF("LSPK_Control_SetOutVal status = %d\r\n",status);
 	if(status)
 		gpio_bit_set(GPIOA, GPIO_PIN_7);
 	else
@@ -347,5 +405,140 @@ void LSPK_Control_ToggleOut(void)
 
 
 
+#if 1
+//PC11  扬声器使能
+//2022-12-13 增加
+void SPKEN_Control_Init(void)
+{
+	//1. 时钟使能
+	rcu_periph_clock_enable(RCU_GPIOC);
+		
+	//2. 初始化后，默认输出低，低使能
+	gpio_bit_reset(GPIOC, GPIO_PIN_11);	
+	
+	//3 上电控制引脚
+	gpio_init(GPIOC, GPIO_MODE_OUT_PP, GPIO_OSPEED_2MHZ, GPIO_PIN_11);  //控制输出	
+}
+
+//高电平点亮 5inch lcd
+void SPKEN_Enable(void)
+{	
+	gpio_bit_reset(GPIOC, GPIO_PIN_11);		
+}
+
+//低电平熄灭 5inch lcd
+void SPKEN_Disable(void)
+{	
+	gpio_bit_set(GPIOC, GPIO_PIN_11);		
+}
 
 
+////PC11  扬声器使能
+void SPKEN_Control_SetOutVal(uint8_t status)
+{
+	MY_PRINTF("SPKEN_Control_SetOutVal status = %d\r\n",status);
+	if(status)
+		SPKEN_Enable();
+	else
+		SPKEN_Disable();
+}
+
+//翻转
+void SPKEN_Control_ToggleOut(void)
+{
+	uint8_t status = gpio_output_bit_get(GPIOC, GPIO_PIN_11);
+	SPKEN_Control_SetOutVal(status);
+}
+
+
+
+//PC12  左耳机使能
+//2022-12-13 增加
+void EAR_L_EN_Control_Init(void)
+{
+	//1. 时钟使能
+	rcu_periph_clock_enable(RCU_GPIOC);
+		
+	//2. 初始化后，默认输出低，低使能
+	gpio_bit_reset(GPIOC, GPIO_PIN_12);	
+	
+	//3 上电控制引脚
+	gpio_init(GPIOC, GPIO_MODE_OUT_PP, GPIO_OSPEED_2MHZ, GPIO_PIN_12);  //控制输出	
+}
+
+//高电平点亮 5inch lcd
+void EAR_L_EN_Enable(void)
+{	
+	gpio_bit_reset(GPIOC, GPIO_PIN_12);		
+}
+
+//低电平熄灭 5inch lcd
+void EAR_L_EN_Disable(void)
+{	
+	gpio_bit_set(GPIOC, GPIO_PIN_12);		
+}
+
+
+////PC5  SHTDB_5IN 输出控制(参数status 非0输出高电平点亮5inch，0输出低熄灭 5inch lcd)
+void EAR_L_EN_Control_SetOutVal(uint8_t status)
+{
+	MY_PRINTF("EAR_L_EN_Control_SetOutVal status = %d\r\n",status);
+	if(status)
+		EAR_L_EN_Enable();
+	else
+		EAR_L_EN_Disable();
+}
+
+//翻转
+void EAR_L_EN_Control_ToggleOut(void)
+{
+	uint8_t status = gpio_output_bit_get(GPIOC, GPIO_PIN_12);
+	EAR_L_EN_Control_SetOutVal(status);
+}
+
+
+//PC13  右耳机使能
+//2022-12-13 增加
+void EAR_R_EN_Control_Init(void)
+{
+	//1. 时钟使能
+	rcu_periph_clock_enable(RCU_GPIOC);
+		
+	//2. 初始化后，默认输出低，低使能
+	gpio_bit_reset(GPIOC, GPIO_PIN_13);	
+	
+	//3 上电控制引脚
+	gpio_init(GPIOC, GPIO_MODE_OUT_PP, GPIO_OSPEED_2MHZ, GPIO_PIN_13);  //控制输出	
+}
+
+//高电平点亮 5inch lcd
+void EAR_R_EN_Enable(void)
+{	
+	gpio_bit_reset(GPIOC, GPIO_PIN_13);		
+}
+
+//低电平熄灭 5inch lcd
+void EAR_R_EN_Disable(void)
+{	
+	gpio_bit_set(GPIOC, GPIO_PIN_13);		
+}
+
+
+////PC5  SHTDB_5IN 输出控制(参数status 非0输出高电平点亮5inch，0输出低熄灭 5inch lcd)
+void EAR_R_EN_Control_SetOutVal(uint8_t status)
+{
+	MY_PRINTF("EAR_R_EN_Control_SetOutVal status = %d\r\n",status);
+	if(status)
+		EAR_R_EN_Enable();
+	else
+		EAR_R_EN_Disable();
+}
+
+//翻转
+void EAR_R_EN_Control_ToggleOut(void)
+{
+	uint8_t status = gpio_output_bit_get(GPIOC, GPIO_PIN_13);
+	EAR_R_EN_Control_SetOutVal(status);
+}
+
+#endif

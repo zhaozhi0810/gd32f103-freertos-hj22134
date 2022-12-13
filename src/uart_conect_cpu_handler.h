@@ -52,7 +52,8 @@ typedef enum
 	eMCU_LEDS_FLASH_TYPE  ,//led闪烁控制
 	eMCU_LSPK_SETONOFF_TYPE  , //LSPK,2022-11-11 1.3新版增加
 	eMCU_V12_CTL_SETONOFF_TYPE ,  //V12_CTL,2022-11-14 1.3新版增加
-	eMCU_GET_LCDTYPE_TYPE  //,   上位机获得LCD类型的接口，之前是在3399，现在改为单片机实现，2022-12-12
+	eMCU_GET_LCDTYPE_TYPE  ,   //上位机获得LCD类型的接口，之前是在3399，现在改为单片机实现，2022-12-12
+	eMCU_5INLCD_SETONOFF_TYPE  //,  //5英寸背光使能引脚的控制,2022-12-13
 }mcu_data_type;
 
 
