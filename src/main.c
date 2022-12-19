@@ -83,6 +83,10 @@ int main(void)
 	//7.led闪烁控制的任务，2022-12-12 改为定时器1控制
 	//xTaskCreate(keyLeds_Flash_task,"led_flash",configMINIMAL_STACK_SIZE,NULL,2,&TaskHandle_leds_Flash);
 	
+	//morse ptt 暂时没有用上，2022-12-19，gpios.c
+	//xTaskCreate(task_morse_ptt_scan,"morseptt",configMINIMAL_STACK_SIZE,NULL,2,&TaskHandle_Morseptt);
+	
+	
 	vTaskStartScheduler();
     
     while(1){}

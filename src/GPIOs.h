@@ -5,6 +5,9 @@
 
 #include <gd32f10x.h>
 
+//extern TaskHandle_t  TaskHandle_Morseptt;   //存放morseptt按键任务指针
+
+
 //gpio 引脚初始化
 void Gpios_init(void);
 

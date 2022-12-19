@@ -185,7 +185,7 @@ char matrix_keys_scan(void)
 
 #ifdef 	BTNS_USE_INT
 //外部中断12的处理函数,按键按下和松开都会触发中断！！！！
-static void exint12_handle(void)
+void exint12_handle(void)
 {
 
 	BaseType_t xHigherPriorityTaskWoken = pdFALSE;
@@ -195,8 +195,9 @@ static void exint12_handle(void)
 	exti_interrupt_disable(EXTI_12);   //扫描完毕之后再使能
 }
 
+#endif
 
-
+#if 0
 void EXTI10_15_IRQHandler(void)
 {
 	if(exti_interrupt_flag_get(EXTI_12))

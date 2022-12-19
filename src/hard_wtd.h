@@ -42,6 +42,9 @@ uint8_t  hard_wtd_get_timeout(void);
 
 //设置看门狗超时时间，单位100ms
 void hard_wtd_set_timeout(uint8_t timeout);
+
+//单片机被看门狗定时器复位，2022-12-19增加
+void my_mcu_retart(void);
 #endif
 
 

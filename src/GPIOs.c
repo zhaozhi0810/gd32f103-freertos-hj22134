@@ -1,6 +1,9 @@
 
 #include "includes.h"
 
+//TaskHandle_t  TaskHandle_Morseptt;   //存放morseptt按键任务指针
+
+
 //PD7 
 static void Wxen_Control_Init(void)
 {
@@ -36,6 +39,72 @@ static void MicCtl_Control_Init(void)
 //{
 //	gpio_bit_reset(GPIOD, GPIO_PIN_6);
 //}
+
+
+
+#if 0
+//PD10  MorsePtt,输入引脚
+static void MorsePtt_Control_Init(void)
+{
+	//1. 时钟使能
+	rcu_periph_clock_enable(RCU_GPIOD);
+		
+	//2.0 上电控制引脚
+	gpio_init(GPIOD, GPIO_MODE_IPU, GPIO_OSPEED_2MHZ, GPIO_PIN_10);  //控制输出	
+	//2. 初始化后，默认输出低
+	//gpio_bit_reset(GPIOD, GPIO_PIN_6);	
+		
+	//3 复用为外部中断引脚，
+	gpio_exti_source_select(GPIO_PORT_SOURCE_GPIOD, GPIO_PIN_SOURCE_10);
+	//设置触发方式，双边沿触发
+	exti_init(EXTI_10, EXTI_INTERRUPT, EXTI_TRIG_BOTH);	
+	exti_interrupt_flag_clear(EXTI_10);
+	exti_interrupt_enable(EXTI_10);
+	//3.1 nvic允许中断
+	//中断控制器使能，使用的是外部中断12
+	//nvic_irq_enable(EXTI10_15_IRQn,  7, 0);   //允许中断，并设置优先级	
+}
+
+
+
+//外部中断10的处理函数,按键按下和松开都会触发中断！！！！
+void exint10_handle(void)
+{
+	BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+	
+	if(gpio_input_bit_get(GPIOD, GPIO_PIN_10))  //高电平，就是按键断开
+	{
+		V12_CTL_Control_SetOutVal(0);  //v12 电压禁止输出
+	}
+	else  //低电平，按键被按下
+	{
+		xTaskNotifyFromISR(TaskHandle_Morseptt, 0, eIncrement, &xHigherPriorityTaskWoken);  //唤醒休眠的任务	
+	}
+	//并且禁止中断
+	//exti_interrupt_disable(EXTI_10);   //扫描完毕之后再使能
+}
+
+
+
+
+//morse ptt 按键检测
+void task_morse_ptt_scan(void* arg)
+{	
+	MorsePtt_Control_Init();
+	while(1)
+	{	
+		//等待任务被唤醒
+		ulTaskNotifyTake(pdFALSE, portMAX_DELAY);   //减1，然后无限等待
+		{	
+			vTaskDelay(2000);    //延时3s
+			V12_CTL_Control_SetOutVal(1);  //v12 电压使能输出
+		}		
+	}
+}
+
+
+#endif
+
 
 
 
@@ -277,7 +346,7 @@ void V12_CTL_Control_Init(void)
 	//1. 时钟使能
 	rcu_periph_clock_enable(RCU_GPIOC);
 		
-	//2. 初始化后，默认输出高
+	//2. 初始化后，默认输出低，2022-12-19改的。
 	gpio_bit_reset(GPIOC, GPIO_PIN_6);	
 	
 	//3 上电控制引脚
@@ -356,7 +425,54 @@ uint8_t Get_Lcd_Type(void)
 }
 
 
+#if 1
+//PA7  LSPK_CRL
+//2022-12-13  该PD5
+void LSPK_Control_Init(void)
+{
+	//1. 时钟使能
+	rcu_periph_clock_enable(RCU_GPIOD);
+		
+	//2. 初始化后，默认输出高
+	gpio_bit_set(GPIOD, GPIO_PIN_5);	
+	
+	//3 上电控制引脚
+	gpio_init(GPIOD, GPIO_MODE_OUT_PP, GPIO_OSPEED_2MHZ, GPIO_PIN_5);  //控制输出		
+}
 
+
+void LSPK_Enable(void)
+{	
+	//1. 初始化后，默认输出低，继电器吸合
+	gpio_bit_set(GPIOD, GPIO_PIN_5);		
+}
+
+void LSPK_Disable(void)
+{	
+	//1. 初始化后，默认输出高
+	gpio_bit_reset(GPIOD, GPIO_PIN_5);		
+}
+
+
+////PA7  LSPK 输出控制(参数status 非0输出高，0输出低)
+void LSPK_Control_SetOutVal(uint8_t status)
+{
+	MY_PRINTF("LSPK_Control_SetOutVal status = %d\r\n",status);
+	if(status)
+		gpio_bit_set(GPIOD, GPIO_PIN_5);
+	else
+		gpio_bit_reset(GPIOD, GPIO_PIN_5);
+}
+
+//翻转
+void LSPK_Control_ToggleOut(void)
+{
+	uint8_t status = gpio_output_bit_get(GPIOD, GPIO_PIN_5);
+	LSPK_Control_SetOutVal(!status);
+	
+//	MY_PRINTF("LSPK_Control output status = %d\r\n",!status);
+}
+#else
 //PA7  LSPK_CRL
 void LSPK_Control_Init(void)
 {
@@ -402,7 +518,7 @@ void LSPK_Control_ToggleOut(void)
 	
 //	MY_PRINTF("LSPK_Control output status = %d\r\n",!status);
 }
-
+#endif
 
 
 #if 1
@@ -542,3 +658,4 @@ void EAR_R_EN_Control_ToggleOut(void)
 }
 
 #endif
+

@@ -231,3 +231,38 @@ void exint12_handle(void);
 //	}
 //}
 
+
+
+
+#ifdef 	BTNS_USE_INT
+//外部中断12的处理函数,按键按下和松开都会触发中断！！！！
+void exint12_handle(void);
+#endif	
+
+//void exint10_handle(void);
+
+
+void EXTI10_15_IRQHandler(void)
+{
+#ifdef 	BTNS_USE_INT		
+	if(exti_interrupt_flag_get(EXTI_12))
+	{
+		
+		exint12_handle();
+	}
+	exti_interrupt_flag_clear(EXTI_12);  //清冲断标志
+#endif	
+	
+	//morse ptt  暂时没有用上 2022-12-19
+//	if(exti_interrupt_flag_get(EXTI_10))
+//	{		
+//		exint10_handle();   //morseptt 按键 的处理
+//		exti_interrupt_flag_clear(EXTI_10);  //清冲断标志
+//	}	
+}
+
+
+
+
+
+

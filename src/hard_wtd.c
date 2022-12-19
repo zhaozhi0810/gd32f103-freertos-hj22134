@@ -172,16 +172,24 @@ static void iwdog_init(uint8_t delaytimes)
 	
 	if(delaytimes == 0)
 	{
-		fwdgt_config(0xfff,FWDGT_PSC_DIV8);    //设置分配系数,最长800ms		
+		fwdgt_config(0xfff,FWDGT_PSC_DIV32);    //设置分配系数,FWDGT_PSC_DIV8最长800ms，FWDGT_PSC_DIV32最大3s		
 	}
 	else //暂时没有用到。2022-10-18
 	{
 		fwdgt_config(0xfff,FWDGT_PSC_DIV64);    //设置分配系数,最长6s	
 	}
+	fwdgt_counter_reload();  //等待时间约3s
 	fwdgt_enable(); //使能看门狗
 	
 	while(1);  //程序卡死，等待复位
 }
+
+
+void my_mcu_retart(void)
+{
+	iwdog_init(0);
+}
+
 
 
 //只是单片机模拟一个看门狗
