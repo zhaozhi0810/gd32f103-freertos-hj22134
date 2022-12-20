@@ -229,6 +229,8 @@ void AnswerCpu_data(uint8_t *cmd)
 		case eMCU_RESET_LCD_TYPE:  //复位lcd 9211（复位引脚没有连通）
 			if(xTaskGetHandle("lt9211") == NULL)  //如果没有这个任务
 			{
+			//	gpio_bit_reset(GPIOC, GPIO_PIN_2);  //OE3 输出低
+			//	SHTDB_5IN_Disable();
 				xTaskCreate(LT9211_Once_Task,"lt9211",configMINIMAL_STACK_SIZE+16,NULL,4,NULL);
 			}			
 			break;

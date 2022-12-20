@@ -789,6 +789,7 @@ void LT9211_Config(void)
 //创建后，删除自己
 void LT9211_Once_Task(void* arg)
 {	
+	
 	LT9211_Mcu_ControlPort_Init();
 	vTaskDelay(10);
 	LT9211_Config();
@@ -800,9 +801,7 @@ void LT9211_Once_Task(void* arg)
 	SHTDB_5IN_Enable();  //5寸背光使能
 	vTaskDelay(100);
 	
-	vTaskDelete(NULL);  //删除自己
-	
-	
+	vTaskDelete(NULL);  //删除自己	
 }
 
 

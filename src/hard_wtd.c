@@ -105,12 +105,13 @@ static uint8_t is_uartcmd_reboot_cpu = 0;  //等于0表示不重启，大于0表示重启，202
 void hard_wtd_reset_3399board(void)
 {	
 	gpio_bit_reset(GPIOC, GPIO_PIN_2);  //OE3 输出低	
-	hard_wtd_disable();   //主板重启后，看门狗关闭
-	
+		
 //	is_uartcmd_reboot_cpu = 3;  //10-17，cpu 重启	
 	gpio_bit_reset(GPIOA, GPIO_PIN_6);
 	vTaskDelay(200);
 	gpio_bit_set(GPIOA, GPIO_PIN_6);
+	
+	hard_wtd_disable();   //主板重启后，看门狗关闭
 }
 
 
@@ -206,7 +207,7 @@ static void hard_wtd_feed_task(void* arg)
 				hwtd_timeout_count--;		
 				if(!hwtd_timeout_count) //数值被减到0
 				{
-					hard_wtd_disable();   //主板重启后，看门狗关闭
+				//	hard_wtd_disable();   //主板重启后，看门狗关闭
 					debug_printf_string("hard_wtd_feed_task timeout\r\n");
 					hard_wtd_reset_3399board();  
 					
