@@ -796,9 +796,13 @@ void LT9211_Once_Task(void* arg)
 	if(Get_Lcd_Type())  //返回非0时表示是7寸屏
 		Enable_LcdLight();
 
+	vTaskDelay(500);
+	SHTDB_5IN_Enable();  //5寸背光使能
 	vTaskDelay(100);
 	
 	vTaskDelete(NULL);  //删除自己
+	
+	
 }
 
 

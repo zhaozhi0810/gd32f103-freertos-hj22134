@@ -39,7 +39,7 @@ void hard_wtd_enable(void)
 	hwtd_timeout_count = hwtd_timeout;
 	debug_printf_string("hard_wtd_enable\r\n");
 	
-	xTaskCreate(hard_wtd_feed_task,"hwtd",configMINIMAL_STACK_SIZE/2,NULL,2,&TaskHandle_Hard_Wtd);
+	xTaskCreate(hard_wtd_feed_task,"hwtd",configMINIMAL_STACK_SIZE,NULL,2,&TaskHandle_Hard_Wtd);
 }
 
 
@@ -107,10 +107,10 @@ void hard_wtd_reset_3399board(void)
 	gpio_bit_reset(GPIOC, GPIO_PIN_2);  //OE3 输出低	
 	hard_wtd_disable();   //主板重启后，看门狗关闭
 	
-	is_uartcmd_reboot_cpu = 3;  //10-17，cpu 重启	
-//	gpio_bit_reset(GPIOA, GPIO_PIN_6);
-//	vTaskDelay(200);
-//	gpio_bit_set(GPIOA, GPIO_PIN_6);
+//	is_uartcmd_reboot_cpu = 3;  //10-17，cpu 重启	
+	gpio_bit_reset(GPIOA, GPIO_PIN_6);
+	vTaskDelay(200);
+	gpio_bit_set(GPIOA, GPIO_PIN_6);
 }
 
 
@@ -168,17 +168,18 @@ void exint4_handle(void)
 //800ms 看门狗
 static void iwdog_init(uint8_t delaytimes)
 {	
+	gpio_bit_reset(GPIOC, GPIO_PIN_2);  //OE3 输出低
 	fwdgt_write_enable();
 	
 	if(delaytimes == 0)
 	{
-		fwdgt_config(0xfff,FWDGT_PSC_DIV32);    //设置分配系数,FWDGT_PSC_DIV8最长800ms，FWDGT_PSC_DIV32最大3s		
+		fwdgt_config(0x0ff,FWDGT_PSC_DIV8);    //设置分配系数,FWDGT_PSC_DIV8最长800ms，FWDGT_PSC_DIV32最大3s		
 	}
 	else //暂时没有用到。2022-10-18
 	{
 		fwdgt_config(0xfff,FWDGT_PSC_DIV64);    //设置分配系数,最长6s	
 	}
-	fwdgt_counter_reload();  //等待时间约3s
+//	fwdgt_counter_reload();  //等待时间约3s
 	fwdgt_enable(); //使能看门狗
 	
 	while(1);  //程序卡死，等待复位
@@ -205,13 +206,14 @@ static void hard_wtd_feed_task(void* arg)
 				hwtd_timeout_count--;		
 				if(!hwtd_timeout_count) //数值被减到0
 				{
+					hard_wtd_disable();   //主板重启后，看门狗关闭
 					debug_printf_string("hard_wtd_feed_task timeout\r\n");
 					hard_wtd_reset_3399board();  
-					hard_wtd_disable();   //主板重启后，看门狗关闭
+					
 				}
 			}
 		}
-		
+#if 0		
 		if(is_uartcmd_reboot_cpu)
 		{
 			//printf("--is_uartcmd_reboot_cpu = %d\r\n",is_uartcmd_reboot_cpu);
@@ -242,7 +244,7 @@ static void hard_wtd_feed_task(void* arg)
 			else if(is_uartcmd_reboot_cpu)
 				is_uartcmd_reboot_cpu--;   //其他情况则倒计时
 		}
-		
+#endif		
 		vTaskDelay(100);
 	}
 

@@ -73,7 +73,7 @@ int main(void)
 	//3. 9211只需要初始化，创建任务后自己删除自己,，如果要打印数据的话，栈要设置大一点
 	xTaskCreate(LT9211_Once_Task,"lt9211",configMINIMAL_STACK_SIZE+16,NULL,4,NULL);
 	//4. 优先级要高一点，不然容易引起cpu端超时错误
-	xTaskCreate(Com_ToCPU_Recv_Task,"ToCpu",configMINIMAL_STACK_SIZE+16,NULL,4,&TaskHandle_ToCpu_Com);  //cpu通信串口任务，优先级高一点
+	xTaskCreate(Com_ToCPU_Recv_Task,"ToCpu",configMINIMAL_STACK_SIZE*2,NULL,4,&TaskHandle_ToCpu_Com);  //cpu通信串口任务，优先级高一点
 	//5. 矩阵键盘扫描任务
 	xTaskCreate(task_matrix_keys_scan,"key_bod",configMINIMAL_STACK_SIZE,NULL,3,&TaskHandle_key_Matrix);  //矩阵键盘扫描任务
 	

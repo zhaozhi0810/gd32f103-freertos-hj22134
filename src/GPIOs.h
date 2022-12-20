@@ -97,7 +97,8 @@ void SHTDB_5IN_Control_Init(void);
 void SHTDB_5IN_Control_SetOutVal(uint8_t status);
 //翻转
 void SHTDB_5IN_Control_ToggleOut(void);
-
+//高电平点亮 5inch lcd
+void SHTDB_5IN_Enable(void);
 
 //PC11  扬声器使能
 //2022-12-13 增加

@@ -278,7 +278,7 @@ void Com_ToCPU_Recv_Task(void * parameter)
 	size_t bytes,i,j;	
 	uint8_t datalen= CPU_UART_CMD_LEN,offset=0;  //datalen表示需要读的字节数
 	uint8_t buf[CPU_UART_CMD_LEN];   //接收缓存
-	
+	uint8_t read_ret = 0;
 	Com_ToCpu_init(115200);
 	
 	
@@ -297,30 +297,31 @@ void Com_ToCPU_Recv_Task(void * parameter)
 			
 			if(bytes < datalen)  //至少等于帧长，datalen不为CPU_UART_CMD_LEN表示buf可能存在数据
 				break;
-
+			
 			offset = CPU_UART_CMD_LEN - datalen;  //缓存的偏移
-
-			if(xStreamBufferReceive(tocpu_rx_StreamBuffer_Handle,buf+offset,datalen,0))  //无限等待改为不等待了
+			read_ret = xStreamBufferReceive(tocpu_rx_StreamBuffer_Handle,buf+offset,datalen,0);//无限等待改为不等待了
+			if(read_ret)  
 			{  //如果缓存有数据
-				if((buf[0] == CPU_UART_HEAD1) && (0 == Uart_Verify_Data_CheckSum(buf,CPU_UART_CMD_LEN)))  //找到数据帧的头部
+				bytes -= read_ret;  //读出这次之后，还有多少字节
+				if((read_ret == datalen) && (buf[0] == CPU_UART_HEAD1) && (0 == Uart_Verify_Data_CheckSum(buf,CPU_UART_CMD_LEN)))  //找到数据帧的头部
 				{												
 					AnswerCpu_data(buf+1);
 				}
-				else  //校验和不正确，可能是帧有错误。
+				else  //校验和不正确,或者读出的字节数也不对，可能是帧有错误。
 				{
-					for(i=1;i<CPU_UART_CMD_LEN;i++)   //前面的判断出问题，考虑是帧错误，寻找下一个帧头！！！
+					for(i=1;i<read_ret;i++)   //前面的判断出问题，考虑是帧错误，寻找下一个帧头！！！
 					{
 						if(buf[i] == CPU_UART_HEAD1)   //中间找到一个帧头
 						{
 							break;
 						}
 					}		
-					if(i != CPU_UART_CMD_LEN) //在数据中间找到帧头！！！
+					if(i != read_ret) //在数据中间找到帧头！！！
 					{
 						datalen = i;   //下一次需要读的字节数
 					//	offset = FRAME_LENGHT-i;  //存储的偏移位置的计算
 
-						for(j=0;i<CPU_UART_CMD_LEN;i++,j++)   //有可能帧头不对，所以第一个字节还是要拷贝一下
+						for(j=0;i<read_ret;i++,j++)   //有可能帧头不对，所以第一个字节还是要拷贝一下
 						{
 							buf[j] = buf[i];   //把剩下的拷贝过去
 						}
@@ -335,7 +336,7 @@ void Com_ToCPU_Recv_Task(void * parameter)
 			else //读缓存数据出现问题
 				break;
 			//bytes -= CPU_UART_HEAD1+i-1;  //计算剩余字节				
-		}while((offset-datalen) >= CPU_UART_CMD_LEN);  //剩余字节多余一帧		
+		}while((bytes) >= CPU_UART_CMD_LEN);  //剩余字节多余一帧，2022-12-20，修正bug		
 	}         
 }
 
