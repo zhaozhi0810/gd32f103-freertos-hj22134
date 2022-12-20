@@ -114,7 +114,7 @@ static void key_light_cs(uint8_t status)
 
 
 
-
+//addr 1-40 对应40个灯。
 static void key_light_send_addr(uint8_t addr)
 {
 #if 1
@@ -192,9 +192,13 @@ static void key_light_leds_control2(uint8_t whichled,uint8_t status)
 	
 //	vTaskDelay(pdMS_TO_TICKS(1));
 //	Delay1ms(1);
+	
+	//经过测试，感觉这个使能是一个边沿操作，不管是上升沿还是下降沿，都可以引起一次更新。，2022-12-20
 	key_light_cs(ENABLE_KEYBOARD_CS);   //1，使能输出
 	Delay1us(30);
 	key_light_cs(DISABLE_KEYBOARD_CS);  //0，保持输出
+	
+	
 }
 
 /*
@@ -212,7 +216,7 @@ void key_light_leds_control(uint8_t whichled,uint8_t status)
 	if((whichled < 1) || (whichled > LEDS_NUM_MAX))  //whichled>0 && 	
 		return;
 	
-	whichled -= 1;   //调整为0-39
+	whichled -= 1;   //调整为0-39  !!!!!!!!
 
 #ifdef LEDS_FLASH_TASK   //这一段主要是取消灯的闪烁控制
 	if(whichled == 39)
@@ -234,14 +238,15 @@ void key_light_leds_control(uint8_t whichled,uint8_t status)
 
 
 
-//获得某一个灯的状态，whichled ： 0 - 39
+//获得某一个灯的状态，whichled ： 1 - 40
 //返回255表示错误，0，1表示正确
 uint8_t get_led_status(uint8_t whichled)
 {
-	if(whichled >= LEDS_NUM_MAX)  //whichled>0 && 
+	if(whichled > LEDS_NUM_MAX)  //whichled>0 && 
 	{
 		return 255;		
 	}	
+	whichled -= 1;   //调整为0-39  !!!!!!!!
 	return (leds_status>>whichled) & 1;	
 }
 
@@ -250,7 +255,7 @@ uint8_t get_led_status(uint8_t whichled)
 //对按键面板上所有led的控制
 void key_light_allleds_control(uint8_t status)
 {
-	key_light_leds_control(40,status);		
+	key_light_leds_control(40,status);	  //全部用40表示	
 }
 
 
