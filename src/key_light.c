@@ -82,12 +82,9 @@ void key_light_leds_init(void)
 	gpio_bit_reset(GPIOE, pin);
 	
 	
-//	rcu_periph_clock_enable(RCU_GPIOE);	
-	//2.0 上电控制引脚
-	gpio_init(GPIOE, GPIO_MODE_OUT_PP, GPIO_OSPEED_2MHZ, GPIO_PIN_8 | GPIO_PIN_9);  //控制输出	
-	//2. 初始化后，默认输出高
-	gpio_bit_set(GPIOE, GPIO_PIN_8 | GPIO_PIN_9);   //PE9 是pwm引脚，需要设置为高！！！2022-09-16	
-	
+	//2. cs引脚初始化后，默认输出低
+	gpio_bit_reset(GPIOE, GPIO_PIN_8);   //PE8 是cs引脚，需要设置为低！！！2022-09-16	  | GPIO_PIN_9
+	gpio_init(GPIOE, GPIO_MODE_OUT_PP, GPIO_OSPEED_2MHZ, GPIO_PIN_8);  //控制输出	 | GPIO_PIN_9
 	Kleds_pwm_init(100);   //键灯pwm值为100
 	
 	//用于led键灯闪烁控制，2022-12-12
@@ -164,6 +161,7 @@ static void key_light_send_addr(uint8_t addr)
 //status : 0表示熄灭，非零表示点亮
 static void key_light_leds_control2(uint8_t whichled,uint8_t status)
 {		
+//	key_light_cs(DISABLE_KEYBOARD_CS);  //0，保持输出
 	if(whichled < LEDS_NUM_MAX)  //whichled>0 && 
 	{
 		key_light_send_addr(whichled+1);		
@@ -192,13 +190,12 @@ static void key_light_leds_control2(uint8_t whichled,uint8_t status)
 	
 //	vTaskDelay(pdMS_TO_TICKS(1));
 //	Delay1ms(1);
-	
+//	Delay1us(30);
 	//经过测试，感觉这个使能是一个边沿操作，不管是上升沿还是下降沿，都可以引起一次更新。，2022-12-20
 	key_light_cs(ENABLE_KEYBOARD_CS);   //1，使能输出
 	Delay1us(30);
 	key_light_cs(DISABLE_KEYBOARD_CS);  //0，保持输出
-	
-	
+		
 }
 
 /*
@@ -255,6 +252,14 @@ uint8_t get_led_status(uint8_t whichled)
 //对按键面板上所有led的控制
 void key_light_allleds_control(uint8_t status)
 {
+//	uint8_t i;
+//	
+//	for(i=0;i<40;i++)   //单个点亮
+//	{
+//		key_light_leds_control(i,status);
+//		Delay1us(50);
+//	}
+	
 	key_light_leds_control(40,status);	  //全部用40表示	
 }
 
@@ -675,9 +680,12 @@ void TIMER1_IRQHandler(void)
 	uint8_t i;
 	uint8_t c = 0;	
 	uint8_t stat[4] = {0};
-	
+
+		
 	if(timer_interrupt_flag_get(TIMER1,TIMER_INT_FLAG_UP)!=RESET)
-	{		
+	{	
+		timer_interrupt_flag_clear(TIMER1,TIMER_INT_FLAG_UP);
+		
 //		count++;  //100ms 已过去			
 		
 		//设置一个条件变量，让任务阻塞
@@ -687,18 +695,23 @@ void TIMER1_IRQHandler(void)
 //			return;
 //		}
 	
-		stat[0] = g_leds_flash_action & 1;
-		stat[1] = g_leds_flash_action & 2;   //0 或者非0 
-		stat[2] = g_leds_flash_action & 4;
-		stat[3] = g_leds_flash_action & 8;
+		//led要不要翻转
+		stat[0] = g_leds_flash_action & 1;  //500ms的闪烁需要翻转
+		stat[1] = g_leds_flash_action & 2;   //0 或者非0 ，800ms的闪烁需要翻转
+		stat[2] = g_leds_flash_action & 4;   //1000ms的需要翻转
+		stat[3] = g_leds_flash_action & 8;   //2000ms的需要翻转
 		
-		for(i=0;i<LEDS_NUM_MAX;i++)
+		//循环扫描所有的led,循环0-38
+		for(i=0;i<LEDS_NUM_MAX-1;i++)
 		{
-			if(g_leds_flash_time[i] < 4)  //某个灯需要闪烁
+			if(g_leds_flash_time[i] < 4)  //某个灯需要闪烁，大于等于5就不需要闪烁
 			{
-				if( g_leds_flash_time_already[g_leds_flash_time[i]] == 0)  //翻转一次
+				//某种闪烁的时间需要翻转吗？
+				if( g_leds_flash_time_already[g_leds_flash_time[i]] == 0)  //到了就需要翻转一次
 				{
-					key_light_leds_control2(i,stat[ g_leds_flash_time[i] ]); //点亮 or 熄灭		
+					//对某个led进行点亮或者熄灭控制
+					key_light_leds_control2(i,stat[g_leds_flash_time[i]]); //点亮 or 熄灭	
+				//	Delay1us(50);					
 				}
 			}
 			else
@@ -716,12 +729,12 @@ void TIMER1_IRQHandler(void)
 		}
 		//vTaskDelay(pdMS_TO_TICKS(100));  //延时  pdMS_TO_TICKS(10)
 		
-		if(c == LEDS_NUM_MAX)
+		if(c == LEDS_NUM_MAX-1)
 			timer_disable(TIMER1);  //关闭定时器//g_leds_flash_control = 0;   //没有灯需要闪烁了。
 
 		
 	}
-	timer_interrupt_flag_clear(TIMER1,TIMER_INT_FLAG_UP);	
+//	timer_interrupt_flag_clear(TIMER1,TIMER_INT_FLAG_UP);	
 }
 #endif
 

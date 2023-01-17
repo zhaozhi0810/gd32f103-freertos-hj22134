@@ -214,6 +214,20 @@ static void  Com_Debug_Print_Help(void)
 	printf("f. key_leds pwm increace(10%%)\r\n");
 	printf("g. key_leds all on\r\n");
 	printf("h. key_leds all off\r\n");
+#if 0
+	printf("j. key_leds some one on\r\n");
+	printf("k. key_leds some one off\r\n");
+	printf("z. key_leds 1-10 on\r\n");
+	printf("x. key_leds 1-10 off\r\n");
+	printf("n. key_leds 11-20 on\r\n");
+	printf("m. key_leds 11-20 off\r\n");
+	printf("q. key_leds 21-30 on\r\n");
+	printf("w. key_leds 21-30 off\r\n");
+	printf("r. key_leds 31-39 on\r\n");
+	printf("t. key_leds 31-39 off\r\n");
+	printf("o. key_leds all on -2\r\n");
+	printf("p. key_leds all off -2\r\n");
+#endif	
 	printf("other. print help\r\n");
 }
 
@@ -308,11 +322,80 @@ static void Com_Debug_Message_Handle1(uint8_t buf)
 			kLedPWM_ToggleOut();
 			break;
 		case 'g':   //¼üµÆÈ«²¿µãÁÁ¿ØÖÆ
+			debug_printf_string("2023 key_light_allleds_control(1)!!\r\n");
 			key_light_allleds_control(1);
 			break;
 		case 'h':   //¼üµÆÈ«²¿Ï¨Ãð¿ØÖÆ
+			debug_printf_string("2023 key_light_allleds_control(0)!!\r\n");
 			key_light_allleds_control(0);
 			break;
+		case 'v':
+			printf("mcu version = %d\r\n", GetMcuVersion());
+			break;
+#if 0
+		/*
+	printf("j. key_leds some one on\r\n");
+	printf("k. key_leds some one off\r\n");
+	printf("z. key_leds 1-10 on\r\n");
+	printf("x. key_leds 1-10 off\r\n");
+	printf("n. key_leds 11-20 on\r\n");
+	printf("m. key_leds 11-20 off\r\n");
+	printf("q. key_leds 21-30 on\r\n");
+	printf("w. key_leds 21-30 off\r\n");
+	printf("r. key_leds 31-39 on\r\n");
+	printf("t. key_leds 31-39 off\r\n");
+	printf("o. key_leds all on -2\r\n");
+	printf("p. key_leds all off -2\r\n");
+		*/
+		case 'j':   //µãÁÁÄ³¸öµÆ
+			debug_printf_string("2023 key_light_allleds_control(0)!!\r\n");
+			key_light_allleds_control(0);
+			break;
+		case 'k':   //Ï¨ÃðÄ³¸öµÆ
+			debug_printf_string("2023 key_light_allleds_control(0)!!\r\n");
+			key_light_allleds_control(0);
+			break;
+		case 'z':   //µãÁÁ1-10µÆ
+			debug_printf_string("2023 key_light_allleds_control(0)!!\r\n");
+			key_light_allleds_control(0);
+			break;
+		case 'x':   //Ï¨Ãð1-10µÆ
+			debug_printf_string("2023 key_light_allleds_control(0)!!\r\n");
+			key_light_allleds_control(0);
+			break;
+		case 'n':   //µãÁÁ11-20µÆ
+			debug_printf_string("2023 key_light_allleds_control(0)!!\r\n");
+			key_light_allleds_control(0);
+			break;
+		case 'm':   //Ï¨Ãð11-20µÆ
+			debug_printf_string("2023 key_light_allleds_control(0)!!\r\n");
+			key_light_allleds_control(0);
+			break;
+		case 'q':   //µãÁÁ21-30µÆ
+			debug_printf_string("2023 key_light_allleds_control(0)!!\r\n");
+			key_light_allleds_control(0);
+			break;
+		case 'w':   //Ï¨Ãð21-30µÆ
+			debug_printf_string("2023 key_light_allleds_control(0)!!\r\n");
+			key_light_allleds_control(0);
+			break;
+		case 'r':   //µãÁÁ31-39µÆ
+			debug_printf_string("2023 key_light_allleds_control(0)!!\r\n");
+			key_light_allleds_control(0);
+			break;
+		case 't':   //Ï¨Ãð31-39µÆ
+			debug_printf_string("2023 key_light_allleds_control(0)!!\r\n");
+			key_light_allleds_control(0);
+			break;
+		case 'o':   //¼üµÆÈ«²¿Ï¨Ãð¿ØÖÆ-2
+			debug_printf_string("2023 key_light_allleds_control(0)!!\r\n");
+			key_light_allleds_control(0);
+			break;
+		case 'p':   //¼üµÆÈ«²¿Ï¨Ãð¿ØÖÆ-2
+			debug_printf_string("2023 key_light_allleds_control(0)!!\r\n");
+			key_light_allleds_control(0);
+			break;
+#endif
 	}
 }
 

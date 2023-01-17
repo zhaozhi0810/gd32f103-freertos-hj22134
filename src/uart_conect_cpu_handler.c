@@ -173,58 +173,75 @@ void USART1_IRQHandler(void)
 void AnswerCpu_data(uint8_t *cmd)
 {
 	uint8_t buf[8] = {CPU_UART_HEAD1};    //头部信息
+	uint8_t isreply = 0;   //0表示不应答，1表示应答
 //	uint8_t dat;
 	buf[1] = cmd[0];   //用于应答的指示
 	buf[2] = 0;   //表示成功，255表示失败
-
+	
+//	if(57 == cmd[0])
+//		MY_PRINTF("AnswerCpu_data cmd = %d data = %d\r\n",cmd[0],cmd[1]);
+	
 	switch(cmd[0])
 	{
 		case eMCU_LED_SETON_TYPE: //设置led ON
 			key_light_leds_control(cmd[1],1);
+			isreply = 0;
 			break;
 		case eMCU_LED_SETOFF_TYPE: //设置led OFF
 			key_light_leds_control(cmd[1],0);
+			isreply = 0;
 		break;
 		case eMCU_LCD_SETONOFF_TYPE:  //设置lcd 打开或者关闭,7寸屏控制
 			if(cmd[1])
 				Enable_LcdLight();   //打开屏幕
 			else
 				Disable_LcdLight();
+			isreply = 0;
 			break;
 		case eMCU_LEDSETALL_TYPE:  //设置所有的led 打开或者关闭
-			if(cmd[1])
-				key_light_leds_control(40,1);   //打开所有的led
-			else
-				key_light_leds_control(40,0);   //关闭所有的led
+			key_light_allleds_control(cmd[1]);
+			isreply = 0;
+//			if(cmd[1])
+//				key_light_leds_control(40,1);   //打开所有的led
+//			else
+//				key_light_leds_control(40,0);   //关闭所有的led
 		break;
 		case eMCU_LED_STATUS_TYPE:		  //led 状态获取			
 			buf[2] = get_led_status(cmd[1]); //获得的值保存在buf[2]中发回去		
+			isreply = 1;
 		//	Lcd_pwm_change(10);
 			break;
 		case eMCU_LEDSETPWM_TYPE:   //设置键灯led的pwm 亮度值
 			set_Kleds_pwm_out(cmd[1]);
+			isreply = 0;
 		//	set_Led_Pwm(cmd[1]);
 			break;
 		case eMCU_GET_TEMP_TYPE:    //获得单片机的温度
 			buf[2] = get_internal_temp()/100;   //只要整数部分。
+			isreply = 1;
 			break;
 		case eMCU_HWTD_SETONOFF_TYPE:  //设置看门狗打开或者关闭
 			if(cmd[1])
 				hard_wtd_enable();   //打开看门狗
 			else
 				hard_wtd_disable();  //关闭
+			isreply = 0;
 			break;
 		case eMCU_HWTD_FEED_TYPE:  //设置看门狗打开或者关闭
 			hard_wtd_feed();  //喂狗
+			isreply = 0;
 			break;
 		case eMCU_HWTD_SETTIMEOUT_TYPE:  //设置看门狗喂狗时间
 			hard_wtd_set_timeout(cmd[1]);  
+			isreply = 0;
 			break;
 		case eMCU_HWTD_GETTIMEOUT_TYPE:  //获取看门狗喂狗时间
-			buf[2] = hard_wtd_get_timeout();  
+			buf[2] = hard_wtd_get_timeout(); 
+			isreply = 1;		
 			break;
 		case eMCU_RESET_COREBOARD_TYPE:  //复位核心板
 			hard_wtd_reset_3399board();  //
+			isreply = 0;
 			break;
 		case eMCU_RESET_LCD_TYPE:  //复位lcd 9211（复位引脚没有连通）
 			if(xTaskGetHandle("lt9211") == NULL)  //如果没有这个任务
@@ -232,42 +249,58 @@ void AnswerCpu_data(uint8_t *cmd)
 			//	gpio_bit_reset(GPIOC, GPIO_PIN_2);  //OE3 输出低
 			//	SHTDB_5IN_Disable();
 				xTaskCreate(LT9211_Once_Task,"lt9211",configMINIMAL_STACK_SIZE+16,NULL,4,NULL);
-			}			
+			}	
+			isreply = 0;
 			break;
-		case eMCU_RESET_LFBOARD_TYPE:  //复位底板，好像没有这个功能！！！
+		case eMCU_RESET_LFBOARD_TYPE:  //复位底板
 			//nothing to do  20220812
 			//2022-12-19 改为单片机重启
 			my_mcu_retart();
+			isreply = 0;
 			break;
 		case eMCU_MICCTRL_SETONOFF_TYPE:  //设置mic_ctrl引脚的高低电平,已取消，改为3399控制，2022-12-12
 			//nothing to do  20221213
 		//	MicCtl_Control_OutHigh(cmd[1]); //高低电平 非0为高，0为低
+			isreply = 0;
 			break;
 		case eMCU_LEDS_FLASH_TYPE:   //led闪烁控制,
 			light_leds_add_flash(cmd[1]);
+			isreply = 0;
 			break;	
 		case eMCU_LSPK_SETONOFF_TYPE:  //设置mic_ctrl引脚的高低电平			
 			LSPK_Control_SetOutVal(cmd[1]);
+			isreply = 0;
 			break;
 		case eMCU_GET_LCDTYPE_TYPE:
 			buf[2] = get_LcdType_val();  //返回值0表示5寸屏，非0表示7寸屏,2022-12-12
+			isreply = 1;
 			break;
 		case eMCU_V12_CTL_SETONOFF_TYPE:
 			V12_CTL_Control_SetOutVal(cmd[1]); //高低电平 非0为高，0为低
+			isreply = 0;
 			break;
 		case eMCU_5INLCD_SETONOFF_TYPE:  //5inch lcd 背光控制
 			SHTDB_5IN_Control_SetOutVal(cmd[1]); //非0输出高电平点亮5inch，0输出低熄灭 5inch lcd
+			isreply = 0;
+			break;
+		case eMCU_GET_MCUVERSION_TYPE:
+			buf[2] = GetMcuVersion();  //返回值0表示5寸屏，非0表示7寸屏,2022-12-12
+			isreply = 1;
 			break;
 		default:
 			buf[2] = 255;   //表示失败
 			//不可识别指令，返回错误码
 			debug_printf_string("error: cpu uart send unkown cmd!!\r\n");
+			isreply = 0;
 			//DBG_PRINTF("error: cpu uart send unkown cmd!! cmd = %#x\r\n",cmd[0]); 
 			break;
 	}
-	buf[3] = CheckSum_For_Uart(buf,3);    //计算并存储校验和，
-//	printf(".x");
-	Com_Cpu_Uart_Tx_String(buf, 4);   //从串口1 发送数据
+	if(isreply)   //是否每一条指令都需要应答。2023-01-15-722
+	{  //2023-01-14 不是每一条指令都需要应答
+		buf[3] = CheckSum_For_Uart(buf,3);    //计算并存储校验和，
+	//	printf(".x");
+		Com_Cpu_Uart_Tx_String(buf, 4);   //从串口1 发送数据
+	}
 }
 
 

@@ -434,7 +434,7 @@ void LSPK_Control_Init(void)
 	rcu_periph_clock_enable(RCU_GPIOD);
 		
 	//2. 初始化后，默认输出高
-	gpio_bit_set(GPIOD, GPIO_PIN_5);	
+	gpio_bit_reset(GPIOD, GPIO_PIN_5);	
 	
 	//3 上电控制引脚
 	gpio_init(GPIOD, GPIO_MODE_OUT_PP, GPIO_OSPEED_2MHZ, GPIO_PIN_5);  //控制输出		

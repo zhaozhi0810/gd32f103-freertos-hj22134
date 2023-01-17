@@ -33,27 +33,29 @@ typedef struct
 typedef enum
 {	
 	eMCU_LED_STATUS_TYPE=50,  //获得led的状态
-	eMCU_KEY_STATUS_TYPE,    //获得按键的状态
-	eMCU_LED_SETON_TYPE,    //设置对应的led亮
-	eMCU_LED_SETOFF_TYPE,    //设置对应的led灭
-	eMCU_LCD_SETONOFF_TYPE,  //lcd打开关闭
-	eMCU_KEY_CHANGE_TYPE,    //按键被修改上报
-    eMCU_LEDSETALL_TYPE,     //对所有led进行控制，点亮或者熄灭
-	eMCU_LEDSETPWM_TYPE,     //设置所有led的亮度 
-	eMCU_GET_TEMP_TYPE,      //获得单片机内部温度	
-	eMCU_HWTD_SETONOFF_TYPE,   //开门狗设置开关
-	eMCU_HWTD_FEED_TYPE,       //看门狗喂狗
-	eMCU_HWTD_SETTIMEOUT_TYPE,    //设置看门狗喂狗时间
-	eMCU_HWTD_GETTIMEOUT_TYPE,    //获取看门狗喂狗时间
-	eMCU_RESET_COREBOARD_TYPE,  //复位核心板
-	eMCU_RESET_LCD_TYPE,        //复位lcd 9211（复位引脚没有连通）
-	eMCU_RESET_LFBOARD_TYPE,    //复位底板，好像没有这个功能！！！
-	eMCU_MICCTRL_SETONOFF_TYPE,  //MICCTRL 引脚的控制,1.3版本改到3399控制了！！！
-	eMCU_LEDS_FLASH_TYPE  ,//led闪烁控制
-	eMCU_LSPK_SETONOFF_TYPE  , //LSPK,2022-11-11 1.3新版增加
-	eMCU_V12_CTL_SETONOFF_TYPE ,  //V12_CTL,2022-11-14 1.3新版增加
-	eMCU_GET_LCDTYPE_TYPE  ,   //上位机获得LCD类型的接口，之前是在3399，现在改为单片机实现，2022-12-12
-	eMCU_5INLCD_SETONOFF_TYPE  //,  //5英寸背光使能引脚的控制,2022-12-13
+	eMCU_KEY_STATUS_TYPE,    //51.获得按键的状态
+	eMCU_LED_SETON_TYPE,    //52.设置对应的led亮
+	eMCU_LED_SETOFF_TYPE,    //53.设置对应的led灭
+	eMCU_LCD_SETONOFF_TYPE,  //54.lcd打开关闭
+	eMCU_KEY_CHANGE_TYPE,    //55.按键被修改上报
+    eMCU_LEDSETALL_TYPE,     //56.对所有led进行控制，点亮或者熄灭
+	eMCU_LEDSETPWM_TYPE,     //57.设置所有led的亮度 
+	eMCU_GET_TEMP_TYPE,      //58.获得单片机内部温度	
+	eMCU_HWTD_SETONOFF_TYPE,   //59.开门狗设置开关
+	eMCU_HWTD_FEED_TYPE,       //60.看门狗喂狗
+	eMCU_HWTD_SETTIMEOUT_TYPE,    //61.设置看门狗喂狗时间
+	eMCU_HWTD_GETTIMEOUT_TYPE,    //62.获取看门狗喂狗时间
+	eMCU_RESET_COREBOARD_TYPE,  //63.复位核心板
+	eMCU_RESET_LCD_TYPE,        //64.复位lcd 9211（复位引脚没有连通）
+	eMCU_RESET_LFBOARD_TYPE,    //65.复位底板，单片机重启
+	eMCU_MICCTRL_SETONOFF_TYPE,  //66.MICCTRL 引脚的控制,1.3版本改到3399控制了！！！
+	eMCU_LEDS_FLASH_TYPE  ,//67.led闪烁控制
+	eMCU_LSPK_SETONOFF_TYPE  , //68.LSPK,2022-11-11 1.3新版增加
+	eMCU_V12_CTL_SETONOFF_TYPE ,  //69.V12_CTL,2022-11-14 1.3新版增加
+	eMCU_GET_LCDTYPE_TYPE  ,   //70.上位机获得LCD类型的接口，之前是在3399，现在改为单片机实现，2022-12-12
+	eMCU_SET_7INCHPWM_TYPE ,  //71.7inch lcd的pwm值调整,2022-12-13
+	eMCU_5INLCD_SETONOFF_TYPE  ,  //72.5英寸背光使能引脚的控制,2022-12-13
+	eMCU_GET_MCUVERSION_TYPE       //73.获取单片机版本
 }mcu_data_type;
 
 

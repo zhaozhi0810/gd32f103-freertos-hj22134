@@ -68,5 +68,10 @@ extern const char* g_build_time_str;
 #include "hard_wtd.h"     //外部硬件看门狗
 
 #include "my_task_info.h"
+
+//获得软件版本2023-01-15
+extern uint8_t GetMcuVersion(void);
+
+
 #endif
 

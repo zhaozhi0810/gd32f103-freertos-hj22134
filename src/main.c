@@ -4,9 +4,12 @@
 
 
 const char* g_build_time_str = "Buildtime :"__DATE__" "__TIME__;   //获得编译时间
+static uint8_t g_McuVersion = 101;   //1.01
 
-
-
+uint8_t GetMcuVersion(void)
+{
+	return g_McuVersion;
+}
 
 static void BoardInit(void)
 {
