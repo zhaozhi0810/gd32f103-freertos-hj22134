@@ -80,9 +80,9 @@
             <nStopB2X>0</nStopB2X>
           </BeforeMake>
           <AfterMake>
-            <RunUserProg1>0</RunUserProg1>
+            <RunUserProg1>1</RunUserProg1>
             <RunUserProg2>0</RunUserProg2>
-            <UserProg1Name></UserProg1Name>
+            <UserProg1Name>fromelf --bin -o ./output/@L.bin ./Objects/@L.axf</UserProg1Name>
             <UserProg2Name></UserProg2Name>
             <UserProg1Dos16Mode>0</UserProg1Dos16Mode>
             <UserProg2Dos16Mode>0</UserProg2Dos16Mode>
@@ -336,7 +336,7 @@
             <v6Rtti>0</v6Rtti>
             <VariousControls>
               <MiscControls></MiscControls>
-              <Define></Define>
+              <Define>GD32F10X_MD</Define>
               <Undefine></Undefine>
               <IncludePath>.\src\freertos\include;.\src;.\src\freertos\portable\RVDS\ARM_CM3</IncludePath>
             </VariousControls>
@@ -522,6 +522,11 @@
               <FileName>my_task_info.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\src\my_task_info.c</FilePath>
+            </File>
+            <File>
+              <FileName>ota-uart.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\ota-uart.c</FilePath>
             </File>
           </Files>
         </Group>

@@ -190,9 +190,13 @@ void debug_printf_string_u32(char* str,uint32_t dat,uint8_t base)
 
 
 
+extern void* __Vectors;
+int main(void);
+
 
 static void  Com_Debug_Print_Help(void)
 {
+	printf("vector = %p\r\n",main);
 	printf("\r\nDebug cmd:\r\n");
 	printf("0. print Program build time\r\n");
 	if(Get_Lcd_Type()){  //返回1表示7寸屏，0表示5寸屏
@@ -228,11 +232,12 @@ static void  Com_Debug_Print_Help(void)
 	printf("o. key_leds all on -2\r\n");
 	printf("p. key_leds all off -2\r\n");
 #endif	
+	printf("y. goto ota program \r\n");  //void goto_ota_program(uint32_t ota_addr)
 	printf("other. print help\r\n");
 }
 
 
-
+extern void goto_ota_program(uint32_t ota_addr);
 
 //这个函数用来处理调试串口接收到的简单的调试命令
 static void Com_Debug_Message_Handle1(uint8_t buf)
@@ -331,6 +336,9 @@ static void Com_Debug_Message_Handle1(uint8_t buf)
 			break;
 		case 'v':
 			printf("mcu version = %d\r\n", GetMcuVersion());
+			break;
+		case 'y':
+			goto_ota_program(0x801d000);   //最后保留的12K，0x802,0000 - 0x3000
 			break;
 #if 0
 		/*

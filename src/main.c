@@ -4,7 +4,13 @@
 
 
 const char* g_build_time_str = "Buildtime :"__DATE__" "__TIME__;   //获得编译时间
-static uint8_t g_McuVersion = 101;   //1.01
+static uint8_t g_McuVersion = 102;   //1.01
+
+/*
+	102   2023-02-02  单片机支持串口升级功能，调试串口命令y 需要烧写ota的程序
+*/
+
+
 
 uint8_t GetMcuVersion(void)
 {
@@ -62,11 +68,15 @@ static void BoardInit(void)
 
 int main(void)
 {
-	BoardInit();
+//	nvic_vector_table_set(NVIC_VECTTAB_FLASH, 0x3000);   //注意变化！！！2023-02-01
 	
+	BoardInit();
+
 	debug_printf_string("freertos , init ok!!\r\n");
 	debug_printf_string((char*)g_build_time_str);   //此时还没有打印任务，不要打印太多数据
 	debug_printf_string("\r\n");
+	
+//	debug_printf_string("\r\n");
 	
 	//1.工作灯的任务
 	xTaskCreate(Task_Led_Show_Work,"TaskLed1",configMINIMAL_STACK_SIZE/2,NULL,2,NULL);
