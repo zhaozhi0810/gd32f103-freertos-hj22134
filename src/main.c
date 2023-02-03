@@ -68,7 +68,7 @@ static void BoardInit(void)
 
 int main(void)
 {
-//	nvic_vector_table_set(NVIC_VECTTAB_FLASH, 0x3000);   //注意变化！！！2023-02-01
+	nvic_vector_table_set(NVIC_VECTTAB_FLASH, 0x3000);   //注意变化！！！2023-02-01
 	
 	BoardInit();
 
