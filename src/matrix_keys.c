@@ -93,9 +93,252 @@ static uint8_t matrix_keys_row_scan(void)
 	}
 }
 
-				
+
+
+#if 1   //2023-02-09  增加
+static uint8_t release_report = 0;  //松开上报。
+
+
+//检测到按键释放后，扫描一次行。
+//P1(L信号)输出高，P0(H信号) 改为输入，读到某些位高电平表示有按键被按下，如果是0则表示按键都松开
+//col : 0-5 分别表示L1 - L6
+uint8_t matrix_keys_col_scan(uint8_t col)
+{
+	uint8_t outcfg_dat[2]={0xff,0};  //P0改为输入，P1改为输出，并且输出高
+	uint8_t key_row_dat;
+	uint8_t outdat = 0;
+	uint8_t ret;
+	
+	//P1 输出1
+	outdat = 1<< col;
+	nca9555_write_outport(NCA9555_IIC_CONTROLER,KEYS_IIC_ADDR,1, outdat); //P1（L信号）端口输出0
+	
+	//P0改输入之前，先输出0，释放一下电平
+	nca9555_write_outport(NCA9555_IIC_CONTROLER,KEYS_IIC_ADDR,0, 0);
+	//配置
+	nca9555_write_2config(NCA9555_IIC_CONTROLER,KEYS_IIC_ADDR,outcfg_dat);
+	//读P0（H信号）端口,没有按键时，应该是0，有按键时不是0
+	if(nca9555_read_inport(NCA9555_IIC_CONTROLER,KEYS_IIC_ADDR,0,&key_row_dat) == 0)  //表示读取成功
+	{
+		if((key_row_dat & 0x3f) != 0)   //只判断低6位，不相等表示有按键按下
+		{
+			ret = key_row_dat&0x3f;
+		}
+		else
+		{
+			ret = 0x7f;
+		//	printf("ERROR: KEY_ROW_SCAN key_row_dat == 0x3f\r\n");
+		}
+	}
+	else //iic读取失败
+	{
+		printf("ERROR: KEY_ROW_SCAN nca9555_read_inport\r\n");
+		ret = 0xff;
+	}
+	
+	//配置，默认是P0(H信号)输出，P1(L信号) 改为输入
+	outcfg_dat[0]=0;   
+	outcfg_dat[1]=0xff;
+	nca9555_write_2config(NCA9555_IIC_CONTROLER,KEYS_IIC_ADDR,outcfg_dat);
+	
+	return ret;
+}
+
+
+//识别是哪个按键
+//col : 0-5 分别表示L1 - L6
+void matrix_keys_scan_col(uint8_t col,uint8_t dat)
+{	
+	uint8_t index,j;
+	if(!dat || (dat >= 0x3f))
+		return;
+	
+	if(col > 5)
+		return;
+	
+	for(j=0;j<ROW_NUM;j++)  //每一行扫描一次
+	{
+		index = 6*j+col;
+		if(index > 35)
+			continue;
+		if(((dat>>j)&(1))) //高电平表示按下，低表示松开
+		{
+			if(!g_btns_info.value[index])
+			{	
+			//	g_btns_info.pressCnt[index]++;
+			//	if(g_btns_info.pressCnt[index] == 2)//检测到不止1次
+				{   //条件限制上报一次
+					g_btns_info.value[index] = 1;
+				//	g_btns_info.reportEn[index] = 1;  //按下上报
+					send_btn_change_to_cpu(index+1,1); //发送按键按下/松开
+					if(more_debug_info)
+						printf("@#@#btn:%d press\r\n",index+1);
+					release_report = 1;   //记录需要释放标志
+				}
+			}
+		}
+		else if(g_btns_info.value[index]) //之前的状态是按下
+		{								
+			g_btns_info.value[index] = 0;
+		//	g_btns_info.reportEn[index] = 2;   //松开上报
+			send_btn_change_to_cpu(index+1,0); //发送按键按下/松开
+			if(more_debug_info)
+				printf("@@@btn:%d release\r\n",index+1);
+			g_btns_info.pressCnt[index] = 0;			
+		}
+	}	
+}
+
+
+
+#endif
+
+
+
+
 							
 
+/***
+ *函数名：KEY_SCAN
+ *功  能：6*6按键扫描
+ *返回值：1~36，对应36个按键,0表示没有检测到
+ */
+char matrix_keys_scan(void)
+{    
+    uint8_t key_row_num=0;        //行扫描结果记录
+    uint8_t i,j;
+	uint8_t index,col_dat;   //
+	uint8_t unpress_count = 0;   //明明进了中断，但是又没见有按键，考虑是列不能识别  
+	
+	
+	key_row_num = matrix_keys_row_scan();
+	if(key_row_num < 0x3f)   //读取到了一个有效的按键触发
+	{
+		for(i=0;i<COL_NUM;i++)  //每一列扫描一次
+		{
+			if(nca9555_write_outport(NCA9555_IIC_CONTROLER,KEYS_IIC_ADDR,0, key_scan_line[i])) //P0端口输出0
+			{
+				printf("ERROR: KEY_ROW_SCAN nca9555_write_outport i=%d\r\n",i);
+				continue;  //写入失败，直接往下试试
+				//	return -1;
+			}
+			//再次读取输入
+			key_row_num = matrix_keys_row_scan();
+			if(key_row_num >= 0x3f)   //扫描到这一行没有按下
+				unpress_count++;
+
+			for(j=0;j<ROW_NUM;j++)  //每一行扫描一次
+			{
+				index = 6*i+j;
+				if(!((key_row_num>>j)&(1))) //按下
+				{
+					if(g_btns_info.pressCnt[index] < 2)
+					{	
+						g_btns_info.pressCnt[index]++;
+						if(g_btns_info.pressCnt[index] == 2)//检测到不止1次
+						{   //条件限制上报一次
+							g_btns_info.value[index] = 1;
+						//	g_btns_info.reportEn[index] = 1;  //按下上报
+							send_btn_change_to_cpu(index+1,1); //发送按键按下/松开
+							if(more_debug_info)
+								printf("----btn:%d press\r\n",index+1);
+							release_report = 1;   //记录需要释放标志
+						}
+					}
+				}
+				else //松开
+				{
+					if(g_btns_info.value[index]) //之前的状态是按下
+					{
+						#if 1
+						col_dat = matrix_keys_col_scan(j);
+				//		printf("j = %d dat = %#x,index = %d\r\n",j,col_dat,index);
+						if(col_dat >= 0x3f)
+						{						
+							g_btns_info.value[index] = 0;
+						//	g_btns_info.reportEn[index] = 2;   //松开上报
+							send_btn_change_to_cpu(index+1,0); //发送按键按下/松开
+							if(more_debug_info)
+								printf("++++btn:%d release\r\n",index+1);
+							g_btns_info.pressCnt[index] = 0;
+						}
+						else{
+							matrix_keys_scan_col(j,col_dat);
+						}
+						#else
+						g_btns_info.value[index] = 0;
+					//	g_btns_info.reportEn[index] = 2;   //松开上报
+						send_btn_change_to_cpu(index+1,0); //发送按键按下/松开
+						printf("++++btn:%d release\r\n",index+1);
+						g_btns_info.pressCnt[index] = 0;
+						#endif
+					}		
+				}
+			}
+		}
+		
+		if(unpress_count >= 6) //明明进了中断，但是又没见有按键
+		{
+			for(index=0;index<COL_NUM;index++)   //再进行一次行扫描
+			{
+				col_dat = matrix_keys_col_scan(index);
+			//	printf("33- dat = %#x,index = %d\r\n",col_dat,index);
+				if(col_dat < 0x3f)
+					matrix_keys_scan_col(index,col_dat);
+			}
+		}		
+	}
+	else
+	{
+		if(release_report)  //需要上报释放信息。
+		{		
+			for(index=0;index<COL_NUM*ROW_NUM;index++)
+			{
+				if(g_btns_info.value[index]) //之前的状态是按下
+				{
+					#if 1
+					j = index%6;
+					col_dat = matrix_keys_col_scan(j);
+				//	printf("22- j = %d dat = %#x,index = %d\r\n",j,col_dat,index);
+					if(col_dat >= 0x3f)
+					{						
+						g_btns_info.value[index] = 0;
+					//	g_btns_info.reportEn[index] = 2;   //松开上报
+						send_btn_change_to_cpu(index+1,0); //发送按键按下/松开
+						if(more_debug_info)
+							printf("####btn:%d release\r\n",index+1);
+						g_btns_info.pressCnt[index] = 0;
+					}
+					#else
+				
+					g_btns_info.value[index] = 0;
+				//	g_btns_info.reportEn[index] = 2;   //松开上报
+					send_btn_change_to_cpu(index+1,0); //发送按键按下/松开
+					printf("#####btn:%d release\r\n",index+1);
+					g_btns_info.pressCnt[index] = 0;
+					#endif
+				}
+				else{
+					matrix_keys_scan_col(j,col_dat);
+				}
+				
+				//检测到的按键次数全部清零
+				g_btns_info.pressCnt[index] = 0;
+				
+			}
+		//	btn_start_scan = 0;   //按键不再扫描
+			release_report = 0;
+		}
+	}
+//	unpress_count = 0;   //计数没有按键次数清零
+	nca9555_write_outport(NCA9555_IIC_CONTROLER,KEYS_IIC_ADDR,0, 0);	
+	
+	return 0;
+}
+
+
+
+#if 0
 /***
  *函数名：KEY_SCAN
  *功  能：6*6按键扫描
@@ -135,7 +378,7 @@ char matrix_keys_scan(void)
 							g_btns_info.value[index] = 1;
 						//	g_btns_info.reportEn[index] = 1;  //按下上报
 							send_btn_change_to_cpu(index+1,1); //发送按键按下/松开
-						//	printf("----btn:%d press\r\n",index+1);
+							printf("----btn:%d press\r\n",index+1);
 							release_report = 1;   //记录需要释放标志
 						}
 					}
@@ -147,7 +390,7 @@ char matrix_keys_scan(void)
 						g_btns_info.value[index] = 0;
 					//	g_btns_info.reportEn[index] = 2;   //松开上报
 						send_btn_change_to_cpu(index+1,0); //发送按键按下/松开
-					//	printf("++++btn:%d release\r\n",index+1);
+						printf("++++btn:%d release\r\n",index+1);
 						g_btns_info.pressCnt[index] = 0;
 					}		
 				}
@@ -165,7 +408,7 @@ char matrix_keys_scan(void)
 					g_btns_info.value[index] = 0;
 				//	g_btns_info.reportEn[index] = 2;   //松开上报
 					send_btn_change_to_cpu(index+1,0); //发送按键按下/松开
-				//	printf("++++btn:%d release\r\n",index+1);
+					printf("#####btn:%d release\r\n",index+1);
 					g_btns_info.pressCnt[index] = 0;
 				}
 				
@@ -179,6 +422,10 @@ char matrix_keys_scan(void)
 	
 	return 0;
 }
+
+#endif
+
+
 
 
 

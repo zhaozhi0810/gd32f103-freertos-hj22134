@@ -178,8 +178,8 @@ void AnswerCpu_data(uint8_t *cmd)
 	buf[1] = cmd[0];   //用于应答的指示
 	buf[2] = 0;   //表示成功，255表示失败
 	
-//	if(57 == cmd[0])
-//		MY_PRINTF("AnswerCpu_data cmd = %d data = %d\r\n",cmd[0],cmd[1]);
+	if(more_debug_info)  //选择增加打印信息
+		MY_PRINTF("recive from Cpu_data cmd = %d data = %d\r\n",cmd[0],cmd[1]);
 	
 	switch(cmd[0])
 	{

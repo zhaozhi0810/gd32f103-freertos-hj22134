@@ -72,6 +72,6 @@ extern const char* g_build_time_str;
 //获得软件版本2023-01-15
 extern uint8_t GetMcuVersion(void);
 
-
+extern uint8_t more_debug_info;   //打印更多的调试信息，0则不打印，调试串口控制
 #endif
 

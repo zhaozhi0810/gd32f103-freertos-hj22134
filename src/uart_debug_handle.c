@@ -34,6 +34,10 @@
 static StreamBufferHandle_t _uart_tx_StreamBuffer_Handle;
 static StreamBufferHandle_t _uart_rx_StreamBuffer_Handle;
 
+uint8_t more_debug_info = 0;   //打印更多的调试信息，0则不打印
+
+
+
 
 void Com_Debug_init(uint32_t bandrate)
 {
@@ -232,7 +236,9 @@ static void  Com_Debug_Print_Help(void)
 	printf("o. key_leds all on -2\r\n");
 	printf("p. key_leds all off -2\r\n");
 #endif	
-	printf("y. goto ota program \r\n");  //void goto_ota_program(uint32_t ota_addr)
+	printf("p. print more debug info\r\n");
+	printf("v. print Program version\r\n");	
+//	printf("y. goto ota program \r\n");  //void goto_ota_program(uint32_t ota_addr)
 	printf("other. print help\r\n");
 }
 
@@ -337,9 +343,20 @@ static void Com_Debug_Message_Handle1(uint8_t buf)
 		case 'v':
 			printf("mcu version = %d\r\n", GetMcuVersion());
 			break;
-		case 'y':
-			goto_ota_program(0x801d000);   //最后保留的12K，0x802,0000 - 0x3000
+		case 'p':
+			if(more_debug_info){
+				printf("close more debug info\r\n");
+				more_debug_info = 0;
+			}
+			else{
+				printf("print more debug info\r\n");
+				more_debug_info = 1;
+			}
+				
 			break;
+//		case 'y':
+		//	goto_ota_program(0x801d000);   //最后保留的12K，0x802,0000 - 0x3000
+//			break;
 #if 0
 		/*
 	printf("j. key_leds some one on\r\n");

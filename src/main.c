@@ -1,6 +1,6 @@
 
 
-#include <includes.h>
+#include "includes.h"
 
 
 const char* g_build_time_str = "Buildtime :"__DATE__" "__TIME__;   //获得编译时间
@@ -88,7 +88,7 @@ int main(void)
 	//4. 优先级要高一点，不然容易引起cpu端超时错误
 	xTaskCreate(Com_ToCPU_Recv_Task,"ToCpu",configMINIMAL_STACK_SIZE*2,NULL,4,&TaskHandle_ToCpu_Com);  //cpu通信串口任务，优先级高一点
 	//5. 矩阵键盘扫描任务
-	xTaskCreate(task_matrix_keys_scan,"key_bod",configMINIMAL_STACK_SIZE,NULL,3,&TaskHandle_key_Matrix);  //矩阵键盘扫描任务
+	xTaskCreate(task_matrix_keys_scan,"key_bod",configMINIMAL_STACK_SIZE*2,NULL,3,&TaskHandle_key_Matrix);  //矩阵键盘扫描任务
 	
 	//6.获取单片机内部温度的任务
 	xTaskCreate(Inter_Temp_task,"temp",configMINIMAL_STACK_SIZE,NULL,2,NULL);
