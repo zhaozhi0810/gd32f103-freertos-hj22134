@@ -7,8 +7,9 @@
 /*
 	工作指示灯   PB4 低电平点亮
 */
-
-
+//ota-uart.c 启动后，设置升级成功标志
+void set_ota_update_success(void);
+extern uint8_t update_success_flag;  //升级成功设置为1，否则为0
 
 void Led_Show_Work_init(void)
 {
@@ -47,9 +48,14 @@ void Task_Led_Show_Work(void* arg)
 		Led_Show_Work_On();
 		vTaskDelay(500);
 		
-		Led_Show_Work_Off();
-		
+		Led_Show_Work_Off();		
 		vTaskDelay(500);
+		
+		if(!update_success_flag)
+		{
+			//启动后，设置升级成功标志
+			set_ota_update_success();
+		}
 	}
 	
 }

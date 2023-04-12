@@ -100,7 +100,7 @@ uint8_t  hard_wtd_get_timeout(void)
 	return hwtd_timeout;
 }
 
-static uint8_t is_uartcmd_reboot_cpu = 0;  //等于0表示不重启，大于0表示重启，2022-10-17
+//static uint8_t is_uartcmd_reboot_cpu = 0;  //等于0表示不重启，大于0表示重启，2022-10-17
 //3399重启控制
 void hard_wtd_reset_3399board(void)
 {	

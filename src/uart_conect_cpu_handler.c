@@ -24,6 +24,12 @@ static StreamBufferHandle_t tocpu_rx_StreamBuffer_Handle;
 TaskHandle_t  TaskHandle_ToCpu_Com;   //存放调试串口任务指针
 
 
+//ota-uart.c,使用3399串口升级
+void goto_ota_update(void);
+
+
+
+
 
 static void Com_ToCpu_init(uint32_t bandrate)
 {
@@ -287,6 +293,11 @@ void AnswerCpu_data(uint8_t *cmd)
 			buf[2] = GetMcuVersion();  //返回值0表示5寸屏，非0表示7寸屏,2022-12-12
 			isreply = 1;
 			break;
+		case eMCU_UPDATE_MCUFIRM_TYPE:
+			hard_wtd_disable();  //关闭用于3399的看门狗
+			goto_ota_update();   //设置标志位后立即重启。
+			break;
+		
 		default:
 			buf[2] = 255;   //表示失败
 			//不可识别指令，返回错误码

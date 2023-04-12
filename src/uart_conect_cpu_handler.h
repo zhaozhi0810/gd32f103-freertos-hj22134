@@ -55,7 +55,8 @@ typedef enum
 	eMCU_GET_LCDTYPE_TYPE  ,   //70.上位机获得LCD类型的接口，之前是在3399，现在改为单片机实现，2022-12-12
 	eMCU_SET_7INCHPWM_TYPE ,  //71.7inch lcd的pwm值调整,2022-12-13
 	eMCU_5INLCD_SETONOFF_TYPE  ,  //72.5英寸背光使能引脚的控制,2022-12-13
-	eMCU_GET_MCUVERSION_TYPE       //73.获取单片机版本
+	eMCU_GET_MCUVERSION_TYPE  ,    //73.获取单片机版本
+	eMCU_UPDATE_MCUFIRM_TYPE       //74.单片机升级命令
 }mcu_data_type;
 
 

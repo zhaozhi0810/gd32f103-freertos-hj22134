@@ -4,7 +4,7 @@
 
 
 const char* g_build_time_str = "Buildtime :"__DATE__" "__TIME__;   //获得编译时间
-static uint8_t g_McuVersion = 102;   //1.01
+static uint8_t g_McuVersion = 103;   //1.03,2023-03-29升级103
 
 /*
 	102   2023-02-02  单片机支持串口升级功能，调试串口命令y 需要烧写ota的程序
@@ -42,7 +42,7 @@ static void BoardInit(void)
 	//键灯引脚控制
 	key_light_leds_init();  
 	
-		
+//	LT9211_ResetPort_Init();	 //9211复位引脚初始化.2023-03-29
 	//15. 启动单片机内部看门狗
 //	iwdog_init();
 //	Delay1ms(5);
@@ -68,7 +68,7 @@ static void BoardInit(void)
 
 int main(void)
 {
-	nvic_vector_table_set(NVIC_VECTTAB_FLASH, 0x3000);   //注意变化！！！2023-02-01
+	nvic_vector_table_set(NVIC_VECTTAB_FLASH, 0x6000);   //注意变化！！！2023-02-01
 	
 	BoardInit();
 

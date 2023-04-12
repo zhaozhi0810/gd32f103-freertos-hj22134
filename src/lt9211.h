@@ -107,7 +107,7 @@ typedef enum  _REG8235_PIXCK_DIVSEL   ////dessc pll to generate pixel clk
 
 
 //Mcu端的控制引脚初始化
-void LT9211_Mcu_ControlPort_Init(void);
+//void LT9211_Mcu_ControlPort_Init(void);
 
 //void LT9211_Reset(void);  //控制屏幕复位
 

@@ -284,8 +284,7 @@ static void Com_Debug_Message_Handle1(uint8_t buf)
 			}
 			break;
 		case '3':
-			query_task();
-			
+			query_task();			
 			break;
 		case '4':  //9211ÖØÆô
 			debug_printf_string("reset LCD & 9211\r\n");  //lcd¼Óµç×´Ì¬
