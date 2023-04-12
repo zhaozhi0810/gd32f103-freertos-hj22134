@@ -51,11 +51,11 @@ void Task_Led_Show_Work(void* arg)
 		Led_Show_Work_Off();		
 		vTaskDelay(500);
 		
-		if(!update_success_flag)
-		{
-			//启动后，设置升级成功标志
-			set_ota_update_success();
-		}
+//		if(!update_success_flag)
+//		{
+//			//启动后，设置升级成功标志
+//			set_ota_update_success();
+//		}
 	}
 	
 }
